@@ -116,6 +116,10 @@ class TimeTrackingPlugin {
                     height: 20px !important;
                 }
                 
+                .mb-2 {
+                    margin-bottom: 0;
+                }
+
                 .sidebar {
                     height: 100vh;
                     overflow-y: auto;
@@ -185,9 +189,92 @@ class TimeTrackingPlugin {
                     background-color: #f9fafb;
                     font-weight: 600;
                 }
+                
+                /* Notification Styles */
+                .notification-container {
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    z-index: 9999;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    max-width: 350px;
+                }
+                
+                .notification {
+                    padding: 12px 16px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    animation: slideIn 0.3s ease-out;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+                
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(-100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                @keyframes slideOut {
+                    from {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                    to {
+                        transform: translateX(-100%);
+                        opacity: 0;
+                    }
+                }
+                
+                .notification.hiding {
+                    animation: slideOut 0.3s ease-out;
+                }
+                
+                .notification-success {
+                    background-color: #10b981;
+                    color: white;
+                }
+                
+                .notification-error {
+                    background-color: #ef4444;
+                    color: white;
+                }
+                
+                .notification-info {
+                    background-color: #3b82f6;
+                    color: white;
+                }
+                
+                .notification-warning {
+                    background-color: #f59e0b;
+                    color: white;
+                }
             </style>
         </head>
         <body class="bg-gray-50">
+            
+        <!-- Notification Container -->
+        <div class="notification-container" x-data="notificationSystem()" id="notificationContainer">
+            <template x-for="notification in notifications" :key="notification.id">
+                <div 
+                    :class="`notification notification-${notification.type} ${notification.hiding ? 'hiding' : ''}`"
+                    x-show="notification.visible"
+                >
+                    <i :class="`fas fa-${getIcon(notification.type)}`"></i>
+                    <span x-text="notification.message"></span>
+                </div>
+            </template>
+        </div>
             
         <div x-data="timeTrackingApp()" x-init="init()" class="flex h-screen">
             
@@ -493,6 +580,55 @@ class TimeTrackingPlugin {
         </div>
         
         <script>
+        // Global notification system
+        function notificationSystem() {
+            return {
+                notifications: [],
+                
+                getIcon(type) {
+                    const icons = {
+                        success: 'check-circle',
+                        error: 'exclamation-circle',
+                        info: 'info-circle',
+                        warning: 'exclamation-triangle'
+                    };
+                    return icons[type] || 'info-circle';
+                },
+                
+                show(message, type = 'info', duration = 3000) {
+                    const id = Date.now() + Math.random();
+                    const notification = {
+                        id,
+                        message,
+                        type,
+                        visible: true,
+                        hiding: false
+                    };
+                    
+                    this.notifications.push(notification);
+                    
+                    // Auto remove after duration
+                    setTimeout(() => {
+                        const notif = this.notifications.find(n => n.id === id);
+                        if (notif) {
+                            notif.hiding = true;
+                            setTimeout(() => {
+                                this.notifications = this.notifications.filter(n => n.id !== id);
+                            }, 300);
+                        }
+                    }, duration);
+                }
+            };
+        }
+        
+        // Global notification function
+        window.showNotification = function(message, type = 'info') {
+            const container = document.querySelector('[x-data*="notificationSystem"]');
+            if (container && container.__x) {
+                container.__x.$data.show(message, type);
+            }
+        };
+        
         function timeTrackingApp() {
             return {
                 // State
@@ -547,6 +683,7 @@ class TimeTrackingPlugin {
                     this.updateCalendarEvents();
                     
                     this.isLoading = false;
+                    window.showNotification('Calendar loaded successfully', 'success');
                 },
                 
                 initializeCalendar() {
@@ -671,6 +808,7 @@ class TimeTrackingPlugin {
                     this.sidebarOpen = true;
                     this.activeTab = 'task';
                     this.loadTimeLogsForTask(taskData.id);
+                    this.resetTimer();
                 },
                 
                 async updateTaskFromEvent(event) {
@@ -703,9 +841,11 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             this.tasks = data.data;
+                        } else {
+                            window.showNotification('Error loading tasks', 'error');
                         }
                     } catch (error) {
-                        console.error('Error loading tasks:', error);
+                        window.showNotification('Error loading tasks: ' + error.message, 'error');
                     }
                 },
                 
@@ -723,20 +863,22 @@ class TimeTrackingPlugin {
                         
                         const data = await response.json();
                         if (data.success) {
+                            // Update the current task ID if it was a new task
+                            if (!this.currentTask.id && data.data && data.data.task_id) {
+                                this.currentTask.id = data.data.task_id;
+                            }
+                            
                             await this.loadTasks();
                             this.updateCalendarEvents();
-                            if (!this.currentTask.id) {
-                                this.resetCurrentTask();
-                            }
+                            
                             if (!silent) {
-                                alert('Task saved successfully!');
+                                window.showNotification('Task saved successfully!', 'success');
                             }
                         } else {
-                            alert('Error saving task: ' + (data.data || 'Unknown error'));
+                            window.showNotification('Error saving task: ' + (data.data || 'Unknown error'), 'error');
                         }
                     } catch (error) {
-                        console.error('Error saving task:', error);
-                        alert('Error saving task');
+                        window.showNotification('Error saving task: ' + error.message, 'error');
                     }
                 },
                 
@@ -761,11 +903,12 @@ class TimeTrackingPlugin {
                             await this.loadTasks();
                             this.updateCalendarEvents();
                             this.resetCurrentTask();
-                            alert('Task deleted successfully!');
+                            window.showNotification('Task deleted successfully!', 'success');
+                        } else {
+                            window.showNotification('Error deleting task', 'error');
                         }
                     } catch (error) {
-                        console.error('Error deleting task:', error);
-                        alert('Error deleting task');
+                        window.showNotification('Error deleting task: ' + error.message, 'error');
                     }
                 },
                 
@@ -799,9 +942,11 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             this.categories = data.data;
+                        } else {
+                            window.showNotification('Error loading categories', 'error');
                         }
                     } catch (error) {
-                        console.error('Error loading categories:', error);
+                        window.showNotification('Error loading categories: ' + error.message, 'error');
                     }
                 },
                 
@@ -821,11 +966,12 @@ class TimeTrackingPlugin {
                         if (data.success) {
                             await this.loadCategories();
                             this.newCategory = { name: '', color: '#3b82f6' };
-                            alert('Category saved successfully!');
+                            window.showNotification('Category saved successfully!', 'success');
+                        } else {
+                            window.showNotification('Error saving category', 'error');
                         }
                     } catch (error) {
-                        console.error('Error saving category:', error);
-                        alert('Error saving category');
+                        window.showNotification('Error saving category: ' + error.message, 'error');
                     }
                 },
                 
@@ -846,22 +992,31 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             await this.loadCategories();
-                            alert('Category deleted successfully!');
+                            window.showNotification('Category deleted successfully!', 'success');
+                        } else {
+                            window.showNotification('Error deleting category', 'error');
                         }
                     } catch (error) {
-                        console.error('Error deleting category:', error);
-                        alert('Error deleting category');
+                        window.showNotification('Error deleting category: ' + error.message, 'error');
                     }
                 },
                 
                 // Timer functions
-                startTimer() {
+                async startTimer() {
+                    // Check if task is saved first
+                    if (!this.currentTask.id) {
+                        window.showNotification('Please save the task first before starting the timer', 'warning');
+                        return;
+                    }
+                    
                     this.timerRunning = true;
                     this.timerStartTime = Date.now() - (this.timerSeconds * 1000);
                     
                     this.timerInterval = setInterval(() => {
                         this.timerSeconds = Math.floor((Date.now() - this.timerStartTime) / 1000);
                     }, 100);
+                    
+                    window.showNotification('Timer started', 'info');
                 },
                 
                 async stopTimer() {
@@ -870,6 +1025,9 @@ class TimeTrackingPlugin {
                     
                     if (this.timerSeconds > 0 && this.currentTask.id) {
                         await this.saveTimeLog(this.timerSeconds);
+                        window.showNotification('Time log saved: ' + this.formatTime(this.timerSeconds), 'success');
+                    } else if (!this.currentTask.id) {
+                        window.showNotification('Cannot save time log - task not saved', 'warning');
                     }
                 },
                 
@@ -888,7 +1046,7 @@ class TimeTrackingPlugin {
                 
                 async saveTimeLog(duration) {
                     if (!this.currentTask.id) {
-                        alert('Please save the task first before logging time.');
+                        window.showNotification('Please save the task first before logging time', 'warning');
                         return;
                     }
                     
@@ -907,15 +1065,20 @@ class TimeTrackingPlugin {
                         
                         const data = await response.json();
                         if (data.success) {
+                            // Reload time logs to show the new one
                             await this.loadTimeLogsForTask(this.currentTask.id);
                             this.resetTimer();
+                        } else {
+                            window.showNotification('Error saving time log: ' + (data.data || 'Unknown error'), 'error');
                         }
                     } catch (error) {
-                        console.error('Error saving time log:', error);
+                        window.showNotification('Error saving time log: ' + error.message, 'error');
                     }
                 },
                 
                 async loadTimeLogsForTask(taskId) {
+                    if (!taskId) return;
+                    
                     try {
                         const formData = new FormData();
                         formData.append('action', 'tt_get_time_logs');
@@ -929,10 +1092,14 @@ class TimeTrackingPlugin {
                         
                         const data = await response.json();
                         if (data.success) {
-                            this.currentTaskTimeLogs = data.data;
+                            this.currentTaskTimeLogs = Array.isArray(data.data) ? data.data : [];
+                        } else {
+                            this.currentTaskTimeLogs = [];
+                            window.showNotification('Error loading time logs', 'error');
                         }
                     } catch (error) {
-                        console.error('Error loading time logs:', error);
+                        this.currentTaskTimeLogs = [];
+                        window.showNotification('Error loading time logs: ' + error.message, 'error');
                     }
                 },
                 
@@ -1002,6 +1169,10 @@ class TimeTrackingPlugin {
         }
         
         $task_id = intval($_POST['task_id']);
+        
+        // Also delete all time logs metadata
+        delete_post_meta($task_id, '_tt_time_logs');
+        
         $result = wp_delete_post($task_id, true);
         
         if ($result) {
@@ -1113,21 +1284,33 @@ class TimeTrackingPlugin {
         $duration = intval($_POST['duration']);
         $note = sanitize_textarea_field($_POST['note']);
         
+        // Get existing logs
         $logs = get_post_meta($task_id, '_tt_time_logs', true);
         if (!is_array($logs)) {
             $logs = array();
         }
         
-        $logs[] = array(
-            'id' => uniqid(),
+        // Add new log with unique ID
+        $new_log = array(
+            'id' => uniqid('log_', true),
             'duration' => $duration,
             'note' => $note,
             'timestamp' => current_time('mysql')
         );
         
-        update_post_meta($task_id, '_tt_time_logs', $logs);
+        $logs[] = $new_log;
         
-        wp_send_json_success();
+        // Save updated logs
+        $result = update_post_meta($task_id, '_tt_time_logs', $logs);
+        
+        if ($result !== false) {
+            wp_send_json_success(array(
+                'log' => $new_log,
+                'total_logs' => count($logs)
+            ));
+        } else {
+            wp_send_json_error('Failed to save time log');
+        }
     }
     
     public function ajax_get_time_logs() {
@@ -1139,6 +1322,11 @@ class TimeTrackingPlugin {
         if (!is_array($logs)) {
             $logs = array();
         }
+        
+        // Sort logs by timestamp (newest first)
+        usort($logs, function($a, $b) {
+            return strtotime($b['timestamp']) - strtotime($a['timestamp']);
+        });
         
         wp_send_json_success($logs);
     }
