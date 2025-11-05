@@ -57,7 +57,7 @@ class TimeTrackingPlugin {
             'show_ui' => false,
             'show_in_menu' => false,
             'capability_type' => 'post',
-            'supports' => array('title'),
+            'supports' => array('title', 'author'),
             'has_archive' => false,
         ));
     }
@@ -78,7 +78,7 @@ class TimeTrackingPlugin {
         add_menu_page(
             __('Time Tracking', 'time-tracking'),
             __('Time Tracking', 'time-tracking'),
-            'manage_options',
+            'read', // Changed from 'manage_options' to allow all logged-in users
             'time-tracking',
             array($this, 'render_main_page'),
             'dashicons-clock',
@@ -1218,8 +1218,8 @@ class TimeTrackingPlugin {
     public function ajax_save_task() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $task_data = json_decode(stripslashes($_POST['task_data']), true);
@@ -1227,11 +1227,19 @@ class TimeTrackingPlugin {
         $post_data = array(
             'post_title' => sanitize_text_field($task_data['title']),
             'post_type' => 'tt_task',
-            'post_status' => 'publish'
+            'post_status' => 'publish',
+            'post_author' => get_current_user_id() // Set current user as author
         );
         
         if (!empty($task_data['id'])) {
             $post_data['ID'] = intval($task_data['id']);
+            
+            // Verify user owns this task
+            $existing_post = get_post($post_data['ID']);
+            if (!$existing_post || $existing_post->post_author != get_current_user_id()) {
+                wp_send_json_error('You do not have permission to edit this task');
+            }
+            
             $post_id = wp_update_post($post_data);
         } else {
             $post_id = wp_insert_post($post_data);
@@ -1257,11 +1265,17 @@ class TimeTrackingPlugin {
     public function ajax_delete_task() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $task_id = intval($_POST['task_id']);
+        
+        // Verify user owns this task
+        $post = get_post($task_id);
+        if (!$post || $post->post_author != get_current_user_id()) {
+            wp_send_json_error('You do not have permission to delete this task');
+        }
         
         // Also delete all time logs metadata
         delete_post_meta($task_id, '_tt_time_logs');
@@ -1278,10 +1292,15 @@ class TimeTrackingPlugin {
     public function ajax_get_tasks() {
         check_ajax_referer('tt_nonce', 'nonce');
         
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
+        }
+        
         $args = array(
             'post_type' => 'tt_task',
             'posts_per_page' => -1,
-            'post_status' => 'publish'
+            'post_status' => 'publish',
+            'author' => get_current_user_id() // Only get current user's tasks
         );
         
         $query = new WP_Query($args);
@@ -1308,14 +1327,18 @@ class TimeTrackingPlugin {
     public function ajax_save_category() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $category_data = json_decode(stripslashes($_POST['category_data']), true);
+        $user_id = get_current_user_id();
+        
+        // Create category name with user ID to make it unique per user
+        $category_name = sanitize_text_field($category_data['name']) . '_user_' . $user_id;
         
         $term = wp_insert_term(
-            sanitize_text_field($category_data['name']),
+            $category_name,
             'tt_category'
         );
         
@@ -1324,6 +1347,8 @@ class TimeTrackingPlugin {
         }
         
         update_term_meta($term['term_id'], '_tt_category_color', sanitize_hex_color($category_data['color']));
+        update_term_meta($term['term_id'], '_tt_category_user', $user_id);
+        update_term_meta($term['term_id'], '_tt_category_display_name', sanitize_text_field($category_data['name']));
         
         wp_send_json_success(array('category_id' => $term['term_id']));
     }
@@ -1331,11 +1356,19 @@ class TimeTrackingPlugin {
     public function ajax_delete_category() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $category_id = intval($_POST['category_id']);
+        $user_id = get_current_user_id();
+        
+        // Verify user owns this category
+        $category_user = get_term_meta($category_id, '_tt_category_user', true);
+        if ($category_user != $user_id) {
+            wp_send_json_error('You do not have permission to delete this category');
+        }
+        
         $result = wp_delete_term($category_id, 'tt_category');
         
         if (is_wp_error($result)) {
@@ -1348,17 +1381,31 @@ class TimeTrackingPlugin {
     public function ajax_get_categories() {
         check_ajax_referer('tt_nonce', 'nonce');
         
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
+        }
+        
+        $user_id = get_current_user_id();
+        
         $terms = get_terms(array(
             'taxonomy' => 'tt_category',
-            'hide_empty' => false
+            'hide_empty' => false,
+            'meta_query' => array(
+                array(
+                    'key' => '_tt_category_user',
+                    'value' => $user_id,
+                    'compare' => '='
+                )
+            )
         ));
         
         $categories = array();
         
         foreach ($terms as $term) {
+            $display_name = get_term_meta($term->term_id, '_tt_category_display_name', true);
             $categories[] = array(
                 'id' => $term->term_id,
-                'name' => $term->name,
+                'name' => $display_name ?: $term->name,
                 'color' => get_term_meta($term->term_id, '_tt_category_color', true) ?: '#3b82f6'
             );
         }
@@ -1369,13 +1416,19 @@ class TimeTrackingPlugin {
     public function ajax_save_time_log() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $task_id = intval($_POST['task_id']);
         $duration = intval($_POST['duration']);
         $note = sanitize_textarea_field($_POST['note']);
+        
+        // Verify user owns this task
+        $post = get_post($task_id);
+        if (!$post || $post->post_author != get_current_user_id()) {
+            wp_send_json_error('You do not have permission to log time for this task');
+        }
         
         // Get existing logs
         $logs = get_post_meta($task_id, '_tt_time_logs', true);
@@ -1409,7 +1462,18 @@ class TimeTrackingPlugin {
     public function ajax_get_time_logs() {
         check_ajax_referer('tt_nonce', 'nonce');
         
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
+        }
+        
         $task_id = intval($_POST['task_id']);
+        
+        // Verify user owns this task
+        $post = get_post($task_id);
+        if (!$post || $post->post_author != get_current_user_id()) {
+            wp_send_json_error('You do not have permission to view logs for this task');
+        }
+        
         $logs = get_post_meta($task_id, '_tt_time_logs', true);
         
         if (!is_array($logs)) {
@@ -1427,13 +1491,19 @@ class TimeTrackingPlugin {
     public function ajax_update_time_log_note() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $task_id = intval($_POST['task_id']);
         $log_id = sanitize_text_field($_POST['log_id']);
         $new_note = sanitize_textarea_field($_POST['note']);
+        
+        // Verify user owns this task
+        $post = get_post($task_id);
+        if (!$post || $post->post_author != get_current_user_id()) {
+            wp_send_json_error('You do not have permission to update this log');
+        }
         
         $logs = get_post_meta($task_id, '_tt_time_logs', true);
         if (!is_array($logs)) {
@@ -1460,12 +1530,18 @@ class TimeTrackingPlugin {
     public function ajax_delete_time_log() {
         check_ajax_referer('tt_nonce', 'nonce');
         
-        if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+        if (!is_user_logged_in()) {
+            wp_send_json_error('You must be logged in');
         }
         
         $task_id = intval($_POST['task_id']);
         $log_id = sanitize_text_field($_POST['log_id']);
+        
+        // Verify user owns this task
+        $post = get_post($task_id);
+        if (!$post || $post->post_author != get_current_user_id()) {
+            wp_send_json_error('You do not have permission to delete this log');
+        }
         
         $logs = get_post_meta($task_id, '_tt_time_logs', true);
         if (!is_array($logs)) {
