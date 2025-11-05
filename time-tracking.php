@@ -43,6 +43,8 @@ class TimeTrackingPlugin {
         add_action('wp_ajax_tt_get_categories', array($this, 'ajax_get_categories'));
         add_action('wp_ajax_tt_save_time_log', array($this, 'ajax_save_time_log'));
         add_action('wp_ajax_tt_get_time_logs', array($this, 'ajax_get_time_logs'));
+        add_action('wp_ajax_tt_update_time_log_note', array($this, 'ajax_update_time_log_note'));
+        add_action('wp_ajax_tt_delete_time_log', array($this, 'ajax_delete_time_log'));
     }
     
     public function register_post_type() {
@@ -129,22 +131,22 @@ class TimeTrackingPlugin {
                 
                 .time-log-entry {
                     border-left: 3px solid #3b82f6;
-                    padding: 8px;
+                    padding: 6px;
                     margin: 4px 0;
                     background-color: #f9fafb;
                     border-radius: 4px;
                 }
                 
                 .timer-display {
-                    font-size: 32px;
+                    font-size: 28px;
                     font-weight: bold;
                     font-family: monospace;
                     text-align: center;
-                    padding: 16px;
+                    padding: 12px;
                     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border-radius: 8px;
-                    margin: 16px 0;
+                    margin: 12px 0;
                 }
                 
                 #calendar {
@@ -349,8 +351,8 @@ class TimeTrackingPlugin {
                         <form @submit.prevent="saveTask()">
                             
                             <!-- Task Name -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Task Name</label>
+                            <div class="mb-3">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Task Name</label>
                                 <input 
                                     type="text" 
                                     x-model="currentTask.title"
@@ -361,9 +363,9 @@ class TimeTrackingPlugin {
                             </div>
                             
                             <!-- Start Date & Time -->
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-2 gap-4 mb-3">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Start Date</label>
                                     <input 
                                         type="date" 
                                         x-model="currentTask.startDate"
@@ -372,7 +374,7 @@ class TimeTrackingPlugin {
                                     >
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Start Time</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Start Time</label>
                                     <input 
                                         type="time" 
                                         x-model="currentTask.startTime"
@@ -383,9 +385,9 @@ class TimeTrackingPlugin {
                             </div>
                             
                             <!-- End Date & Time -->
-                            <div class="grid grid-cols-2 gap-4 mb-4">
+                            <div class="grid grid-cols-2 gap-4 mb-3">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">End Date</label>
                                     <input 
                                         type="date" 
                                         x-model="currentTask.endDate"
@@ -394,7 +396,7 @@ class TimeTrackingPlugin {
                                     >
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-2">End Time</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">End Time</label>
                                     <input 
                                         type="time" 
                                         x-model="currentTask.endTime"
@@ -405,8 +407,8 @@ class TimeTrackingPlugin {
                             </div>
                             
                             <!-- Category -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                            <div class="mb-3">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Category</label>
                                 <select 
                                     x-model="currentTask.category"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -419,19 +421,19 @@ class TimeTrackingPlugin {
                             </div>
                             
                             <!-- Description -->
-                            <div class="mb-4">
-                                <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                            <div class="mb-3">
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
                                 <textarea 
                                     x-model="currentTask.description"
-                                    rows="4"
+                                    rows="2"
                                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     placeholder="Add task description..."
                                 ></textarea>
                             </div>
                             
                             <!-- Time Tracking Section -->
-                            <div class="mb-6 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-                                <h3 class="text-lg font-semibold text-gray-800 mb-3">
+                            <div class="mb-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
+                                <h3 class="text-base font-semibold text-gray-800 mb-2">
                                     <i class="fas fa-stopwatch"></i> Time Tracking
                                 </h3>
                                 
@@ -439,12 +441,12 @@ class TimeTrackingPlugin {
                                 <div class="timer-display" x-text="formatTime(timerSeconds)"></div>
                                 
                                 <!-- Timer Controls -->
-                                <div class="flex gap-2 mb-4">
+                                <div class="flex gap-2 mb-3">
                                     <button 
                                         type="button"
                                         @click="startTimer()"
                                         x-show="!timerRunning"
-                                        class="flex-1 px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold"
+                                        class="flex-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold text-sm"
                                     >
                                         <i class="fas fa-play"></i> Start
                                     </button>
@@ -452,30 +454,57 @@ class TimeTrackingPlugin {
                                         type="button"
                                         @click="stopTimer()"
                                         x-show="timerRunning"
-                                        class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold"
+                                        class="flex-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold text-sm"
                                     >
                                         <i class="fas fa-stop"></i> Stop
                                     </button>
                                     <button 
                                         type="button"
                                         @click="resetTimer()"
-                                        class="px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+                                        class="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm"
                                     >
                                         <i class="fas fa-redo"></i>
                                     </button>
                                 </div>
                                 
                                 <!-- Time Logs -->
-                                <div class="mt-4">
+                                <div class="mt-3">
                                     <h4 class="text-sm font-semibold text-gray-700 mb-2">Time Logs</h4>
-                                    <div class="max-h-48 overflow-y-auto space-y-2">
+                                    <div class="max-h-[200px] overflow-y-auto space-y-1">
                                         <template x-for="log in currentTaskTimeLogs" :key="log.id">
                                             <div class="time-log-entry">
                                                 <div class="flex justify-between items-center">
                                                     <span class="text-sm font-semibold" x-text="formatTime(log.duration)"></span>
-                                                    <span class="text-xs text-gray-500" x-text="new Date(log.timestamp).toLocaleString()"></span>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs text-gray-500" x-text="new Date(log.timestamp).toLocaleString()"></span>
+                                                        <button 
+                                                            @click="deleteTimeLog(log.id)"
+                                                            class="text-red-500 hover:text-red-700"
+                                                            type="button"
+                                                        >
+                                                            <i class="fas fa-times text-xs"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <p class="text-xs text-gray-600 mt-1" x-text="log.note || 'No note'"></p>
+                                                <div class="mt-1">
+                                                    <input 
+                                                        x-show="editingLogId === log.id"
+                                                        type="text"
+                                                        :value="log.note"
+                                                        @blur="editingLogId = null"
+                                                        @keyup.enter="updateTimeLogNote(log.id, $event.target.value); editingLogId = null"
+                                                        @keyup.escape="editingLogId = null"
+                                                        x-ref="noteInput"
+                                                        class="w-full text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                                                        placeholder="Add note and press Enter..."
+                                                    />
+                                                    <p 
+                                                        x-show="editingLogId !== log.id"
+                                                        @click="editingLogId = log.id; $nextTick(() => { const input = $el.parentElement.querySelector('input'); if(input) { input.focus(); input.select(); } })"
+                                                        class="text-xs text-gray-600 cursor-pointer hover:bg-gray-100 px-1 rounded"
+                                                        x-text="log.note || 'Click to add note...'"
+                                                    ></p>
+                                                </div>
                                             </div>
                                         </template>
                                         <div x-show="currentTaskTimeLogs.length === 0" class="text-sm text-gray-500 text-center py-4">
@@ -663,6 +692,7 @@ class TimeTrackingPlugin {
                 timerInterval: null,
                 timerStartTime: null,
                 currentTaskTimeLogs: [],
+                editingLogId: null,
                 
                 // Initialize
                 async init() {
@@ -1103,6 +1133,69 @@ class TimeTrackingPlugin {
                     }
                 },
                 
+                async updateTimeLogNote(logId, newNote) {
+                    if (!this.currentTask.id) return;
+                    
+                    // Don't update if note hasn't changed
+                    const currentLog = this.currentTaskTimeLogs.find(log => log.id === logId);
+                    if (currentLog && currentLog.note === newNote) {
+                        return;
+                    }
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('action', 'tt_update_time_log_note');
+                        formData.append('nonce', '<?php echo wp_create_nonce("tt_nonce"); ?>');
+                        formData.append('task_id', this.currentTask.id);
+                        formData.append('log_id', logId);
+                        formData.append('note', newNote);
+                        
+                        const response = await fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            await this.loadTimeLogsForTask(this.currentTask.id);
+                            window.showNotification('Note updated', 'success');
+                        } else {
+                            window.showNotification('Error updating note', 'error');
+                        }
+                    } catch (error) {
+                        window.showNotification('Error updating note: ' + error.message, 'error');
+                    }
+                },
+                
+                async deleteTimeLog(logId) {
+                    if (!this.currentTask.id) return;
+                    
+                    if (!confirm('Delete this time log?')) return;
+                    
+                    try {
+                        const formData = new FormData();
+                        formData.append('action', 'tt_delete_time_log');
+                        formData.append('nonce', '<?php echo wp_create_nonce("tt_nonce"); ?>');
+                        formData.append('task_id', this.currentTask.id);
+                        formData.append('log_id', logId);
+                        
+                        const response = await fetch('<?php echo admin_url("admin-ajax.php"); ?>', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        const data = await response.json();
+                        if (data.success) {
+                            await this.loadTimeLogsForTask(this.currentTask.id);
+                            window.showNotification('Time log deleted', 'success');
+                        } else {
+                            window.showNotification('Error deleting time log', 'error');
+                        }
+                    } catch (error) {
+                        window.showNotification('Error deleting time log: ' + error.message, 'error');
+                    }
+                },
+                
                 // Sidebar
                 toggleSidebar() {
                     this.sidebarOpen = !this.sidebarOpen;
@@ -1329,6 +1422,71 @@ class TimeTrackingPlugin {
         });
         
         wp_send_json_success($logs);
+    }
+    
+    public function ajax_update_time_log_note() {
+        check_ajax_referer('tt_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $task_id = intval($_POST['task_id']);
+        $log_id = sanitize_text_field($_POST['log_id']);
+        $new_note = sanitize_textarea_field($_POST['note']);
+        
+        $logs = get_post_meta($task_id, '_tt_time_logs', true);
+        if (!is_array($logs)) {
+            wp_send_json_error('No logs found');
+        }
+        
+        // Find and update the log
+        foreach ($logs as &$log) {
+            if ($log['id'] === $log_id) {
+                $log['note'] = $new_note;
+                break;
+            }
+        }
+        
+        $result = update_post_meta($task_id, '_tt_time_logs', $logs);
+        
+        if ($result !== false) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error('Failed to update note');
+        }
+    }
+    
+    public function ajax_delete_time_log() {
+        check_ajax_referer('tt_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+        
+        $task_id = intval($_POST['task_id']);
+        $log_id = sanitize_text_field($_POST['log_id']);
+        
+        $logs = get_post_meta($task_id, '_tt_time_logs', true);
+        if (!is_array($logs)) {
+            wp_send_json_error('No logs found');
+        }
+        
+        // Filter out the log to delete
+        $logs = array_filter($logs, function($log) use ($log_id) {
+            return $log['id'] !== $log_id;
+        });
+        
+        // Re-index the array
+        $logs = array_values($logs);
+        
+        $result = update_post_meta($task_id, '_tt_time_logs', $logs);
+        
+        if ($result !== false) {
+            wp_send_json_success();
+        } else {
+            wp_send_json_error('Failed to delete log');
+        }
     }
 }
 
