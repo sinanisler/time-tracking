@@ -113,7 +113,7 @@ class TimeTrackingPlugin {
                     overflow-x: hidden;
                 }
                 .fc .fc-timegrid-slot {
-                    height: 30px !important;
+                    height: 20px !important;
                 }
                 
                 .sidebar {
@@ -193,7 +193,15 @@ class TimeTrackingPlugin {
             
             <!-- Main Calendar Area -->
             <div class="flex-1 overflow-auto p-6">
-                <div class="bg-white rounded-lg shadow-lg p-6">
+                <div class="bg-white rounded-lg shadow-lg p-6 relative">
+                    
+                    <!-- Loading Overlay -->
+                    <div x-show="isLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 rounded-lg">
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin text-5xl text-purple-500 mb-4"></i>
+                            <p class="text-gray-600 text-lg font-semibold">Loading calendar...</p>
+                        </div>
+                    </div>
                     
                     <!-- Header -->
                     <div class="flex justify-between items-center mb-6">
@@ -493,6 +501,7 @@ class TimeTrackingPlugin {
                 categories: [],
                 sidebarOpen: true,
                 activeTab: 'task',
+                isLoading: true,
                 
                 // Current task
                 currentTask: {
@@ -521,11 +530,23 @@ class TimeTrackingPlugin {
                 
                 // Initialize
                 async init() {
-                    await this.loadCategories();
-                    await this.loadTasks();
+                    this.isLoading = true;
+                    
+                    // Initialize calendar FIRST with empty data
                     this.$nextTick(() => {
                         this.initializeCalendar();
                     });
+                    
+                    // Load data in PARALLEL (not sequential)
+                    await Promise.all([
+                        this.loadCategories(),
+                        this.loadTasks()
+                    ]);
+                    
+                    // Update calendar once after both are loaded
+                    this.updateCalendarEvents();
+                    
+                    this.isLoading = false;
                 },
                 
                 initializeCalendar() {
@@ -541,7 +562,7 @@ class TimeTrackingPlugin {
                         },
                         slotMinTime: '09:00:00',
                         slotMaxTime: '18:00:00',
-                        slotDuration: '00:30:00',
+                        slotDuration: '00:15:00',
                         weekends: false, // Hide weekends
                         allDaySlot: false,
                         nowIndicator: true,
@@ -600,7 +621,6 @@ class TimeTrackingPlugin {
                     });
                     
                     this.calendar.render();
-                    this.updateCalendarEvents();
                 },
                 
                 formatDateStr(date) {
@@ -635,11 +655,9 @@ class TimeTrackingPlugin {
                         };
                     });
                     
-                    // Remove all existing events
-                    this.calendar.getEvents().forEach(event => event.remove());
-                    
-                    // Add new events
-                    events.forEach(event => this.calendar.addEvent(event));
+                    // More efficient: use removeAllEvents() then addEventSource()
+                    this.calendar.removeAllEvents();
+                    this.calendar.addEventSource(events);
                 },
                 
                 getCategoryColor(categoryId) {
@@ -685,7 +703,6 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             this.tasks = data.data;
-                            this.updateCalendarEvents();
                         }
                     } catch (error) {
                         console.error('Error loading tasks:', error);
@@ -707,6 +724,7 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             await this.loadTasks();
+                            this.updateCalendarEvents();
                             if (!this.currentTask.id) {
                                 this.resetCurrentTask();
                             }
@@ -741,6 +759,7 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             await this.loadTasks();
+                            this.updateCalendarEvents();
                             this.resetCurrentTask();
                             alert('Task deleted successfully!');
                         }
@@ -780,7 +799,6 @@ class TimeTrackingPlugin {
                         const data = await response.json();
                         if (data.success) {
                             this.categories = data.data;
-                            this.updateCalendarEvents();
                         }
                     } catch (error) {
                         console.error('Error loading categories:', error);
