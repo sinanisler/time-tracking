@@ -293,7 +293,7 @@ class TimeTrackingPlugin {
                     </div>
                     
                     <!-- Header -->
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex justify-between items-center">
                         <div>
                             <h1 class="text-3xl font-bold text-gray-800">Time Tracking</h1>
                             <p class="text-gray-600">Workweek Schedule (Monday - Friday, 9 AM - 6 PM)</p>
@@ -329,7 +329,7 @@ class TimeTrackingPlugin {
                     </div>
                     
                     <!-- Tabs -->
-                    <div class="flex gap-2 mb-6 border-b">
+                    <div class="flex gap-2  border-b">
                         <button 
                             @click="activeTab = 'task'" 
                             :class="activeTab === 'task' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'"
