@@ -23,15 +23,20 @@
     },
     "files": [
       "electron/**/*",
-      "dist/**/*"
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/better-sqlite3",
+        "to": "node_modules/better-sqlite3"
+      }
     ],
     "win": {
-      "target": "nsis",
-      "icon": "public/icon.png"
+      "target": "nsis"
     },
     "mac": {
-      "target": "dmg",
-      "icon": "public/icon.png"
+      "target": "dmg"
     }
   },
   "devDependencies": {

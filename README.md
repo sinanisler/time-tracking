@@ -75,6 +75,10 @@ npm run electron:build:mac
 
 The built applications will be available in the `dist-electron` directory.
 
+**Note**: To add a custom application icon, place:
+- `icon.png` (at least 512x512 pixels) in the `public/` directory for both platforms
+- Or `icon.ico` for Windows and `icon.icns` for macOS
+
 ## Project Structure
 
 ```

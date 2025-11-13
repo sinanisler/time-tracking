@@ -1,0 +1,1 @@
+Icon placeholder - use proper icon in production
