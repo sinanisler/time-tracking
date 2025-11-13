@@ -1,0 +1,18 @@
+# WordPress
+.DS_Store
+thumbs.db
+
+# Plugin development
+node_modules/
+.sass-cache/
+*.log
+.vscode/
+.idea/
+
+# Backup files
+*-old.php
+*.bak
+*~
+
+# Compiled files
+*.mo
