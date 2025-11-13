@@ -93,7 +93,7 @@ class TT_Calendar {
 					<!-- Loading Overlay -->
 					<div x-show="isLoading" class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50 rounded-lg">
 						<div class="text-center">
-							<i class="fas fa-spinner fa-spin text-5xl text-purple-500 mb-4"></i>
+							<i class="fas fa-spinner fa-spin text-5xl text-blue-500 mb-4"></i>
 							<p class="text-gray-600 text-lg font-semibold"><?php esc_html_e( 'Loading calendar...', 'time-tracking' ); ?></p>
 						</div>
 					</div>
@@ -111,7 +111,7 @@ class TT_Calendar {
 						</div>
 						
 						<div class="flex gap-2">
-							<button @click="toggleSidebar()" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold">
+							<button @click="toggleSidebar()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold">
 								<i class="fas fa-cog"></i> <?php esc_html_e( 'Task Settings', 'time-tracking' ); ?>
 							</button>
 						</div>
@@ -243,10 +243,15 @@ class TT_Calendar {
 							</div>
 							
 							<!-- Time Tracking Section -->
-							<div class="mb-4 p-3 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
-								<h3 class="text-base font-semibold text-gray-800 mb-2">
-									<i class="fas fa-stopwatch"></i> <?php esc_html_e( 'Time Tracking', 'time-tracking' ); ?>
-								</h3>
+							<div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-blue-50 rounded-lg" x-data="{ timeTrackingExpanded: false }">
+								<button @click="timeTrackingExpanded = !timeTrackingExpanded" type="button" class="w-full flex justify-between items-center text-base font-semibold text-gray-800 mb-2 hover:text-blue-600">
+									<span>
+										<i class="fas fa-stopwatch"></i> <?php esc_html_e( 'Time Tracking', 'time-tracking' ); ?>
+									</span>
+									<i class="fas transition-transform duration-200" :class="timeTrackingExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+								</button>
+								
+								<div x-show="timeTrackingExpanded" x-collapse>
 								
 								<!-- Timer Display -->
 								<div class="timer-display" x-text="formatTime(timerSeconds)"></div>
@@ -322,6 +327,7 @@ class TT_Calendar {
 											<?php esc_html_e( 'No time logs yet', 'time-tracking' ); ?>
 										</div>
 									</div>
+								</div>
 								</div>
 							</div>
 							
