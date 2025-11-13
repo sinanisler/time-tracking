@@ -37,8 +37,6 @@ class TT_Calendar {
 	 */
 	public function render() {
 		$settings     = $this->settings->get_settings();
-		$color_scheme = isset( $settings['color_scheme'] ) ? $settings['color_scheme'] : 'light';
-		$dark_mode    = ( 'dark' === $color_scheme ) ? 'time-tracking-dark-mode' : '';
 
 		// Get working hours and days
 		$start_time   = isset( $settings['start_time'] ) ? $settings['start_time'] : '09:00';
@@ -71,7 +69,7 @@ class TT_Calendar {
 			<!-- Custom Styles -->
 			<link rel="stylesheet" href="<?php echo esc_url( TIME_TRACKING_PLUGIN_URL . 'assets/css/style.css' ); ?>">
 		</head>
-		<body class="bg-gray-50 time-tracking-page <?php echo esc_attr( $dark_mode ); ?>">
+		<body class="bg-gray-50 time-tracking-page">
 			
 		<!-- Notification Container -->
 		<div class="notification-container" x-data="notificationSystem()" id="notificationContainer">

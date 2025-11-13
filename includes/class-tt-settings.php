@@ -111,7 +111,6 @@ class TT_Settings {
 	private function get_default_settings() {
 		return array(
 			'timezone'           => wp_timezone_string(),
-			'color_scheme'       => 'light',
 			'start_time'         => '09:00',
 			'end_time'           => '18:00',
 			'working_days'       => array( 1, 2, 3, 4, 5 ), // Monday to Friday
@@ -142,10 +141,6 @@ class TT_Settings {
 
 		if ( isset( $input['timezone'] ) ) {
 			$sanitized['timezone'] = sanitize_text_field( $input['timezone'] );
-		}
-
-		if ( isset( $input['color_scheme'] ) ) {
-			$sanitized['color_scheme'] = in_array( $input['color_scheme'], array( 'light', 'dark', 'auto' ), true ) ? $input['color_scheme'] : 'light';
 		}
 
 		if ( isset( $input['start_time'] ) ) {
@@ -258,19 +253,6 @@ class TT_Settings {
 									);
 									?>
 								</p>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row">
-								<label for="tt_color_scheme"><?php esc_html_e( 'Color Scheme', 'time-tracking' ); ?></label>
-							</th>
-							<td>
-								<select name="<?php echo esc_attr( $this->option_name ); ?>[color_scheme]" id="tt_color_scheme">
-									<option value="light" <?php selected( $settings['color_scheme'], 'light' ); ?>><?php esc_html_e( 'Light', 'time-tracking' ); ?></option>
-									<option value="dark" <?php selected( $settings['color_scheme'], 'dark' ); ?>><?php esc_html_e( 'Dark', 'time-tracking' ); ?></option>
-									<option value="auto" <?php selected( $settings['color_scheme'], 'auto' ); ?>><?php esc_html_e( 'Auto (System)', 'time-tracking' ); ?></option>
-								</select>
-								<p class="description"><?php esc_html_e( 'Choose the color scheme for the calendar interface.', 'time-tracking' ); ?></p>
 							</td>
 						</tr>
 					</table>
