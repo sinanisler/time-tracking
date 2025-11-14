@@ -23,17 +23,3 @@ Time Tracking is a powerful and intuitive time management plugin for WordPress t
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Navigate to 'Time Tracking' in the WordPress admin menu
 4. Configure your settings and start tracking!
-
-## Requirements
-
-- WordPress 5.8 or greater
-- PHP 8.0 or greater
-- MySQL 5.6 or greater
-
-## License
-
-GPL v2 or later - https://www.gnu.org/licenses/gpl-2.0.html
-
-## Author
-
-Sinan Isler - https://sinanisler.com
