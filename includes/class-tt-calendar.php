@@ -114,6 +114,9 @@ class TT_Calendar {
 						</div>
 						
 						<div class="flex gap-2">
+							<button @click="toggleTodoSidebar()" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold">
+								<i class="fas fa-list-check"></i> <?php esc_html_e( 'TO-DO', 'time-tracking' ); ?>
+							</button>
 							<button @click="toggleSidebar()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold">
 								<i class="fas fa-cog"></i> <?php esc_html_e( 'Task Settings', 'time-tracking' ); ?>
 							</button>

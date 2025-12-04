@@ -57,6 +57,13 @@ class TimeTrackingPlugin {
 	private $ajax;
 
 	/**
+	 * TODO AJAX instance
+	 *
+	 * @var TT_Todo_Ajax
+	 */
+	private $todo_ajax;
+
+	/**
 	 * Get single instance
 	 *
 	 * @return TimeTrackingPlugin
