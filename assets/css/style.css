@@ -191,20 +191,20 @@ body.time-tracking-page {
 
 /* Ensure text color is inherited from the event's textColor property */
 .fc-v-event .fc-event-main {
-    color: inherit !important;
+     
 }
 
 .fc-v-event .fc-event-main .fc-event-time,
 .fc-v-event .fc-event-main .fc-event-title,
 .fc-v-event .fc-event-main .fc-event-time span {
-    color: inherit !important;
+    
 }
 
 /* Override FullCalendar default colors */
 .fc-event-time,
 .fc-event-title,
 .fc-event-time span {
-    color: inherit !important;
+     
 }
 
 /* Dark Mode Support */
