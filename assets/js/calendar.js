@@ -87,7 +87,7 @@ function timeTrackingApp() {
 		editingCategoryId: null,
 		editingCategory: {
 			name: '',
-			color: '',
+					titleDiv.style.setProperty('color', textColor, 'important');
 			textColor: ''
 		},
 
