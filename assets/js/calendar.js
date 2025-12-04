@@ -226,6 +226,9 @@ function timeTrackingApp() {
 					// Apply text color from event
 					container.style.color = arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff';
 
+					// Get the text color for all child elements
+					const textColor = arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff';
+
 					// Create time display
 					const timeDiv = document.createElement('div');
 					timeDiv.className = 'fc-event-time';
@@ -233,15 +236,18 @@ function timeTrackingApp() {
 					timeDiv.style.justifyContent = 'space-between';
 					timeDiv.style.alignItems = 'center';
 					timeDiv.style.marginBottom = '2px';
+					timeDiv.style.color = textColor;
 
 					const timeSpan = document.createElement('span');
 					timeSpan.textContent = arg.timeText;
+					timeSpan.style.color = textColor;
 
 					const durationSpan = document.createElement('span');
 					durationSpan.textContent = durationText;
 					durationSpan.style.fontSize = '0.85em';
 					durationSpan.style.fontWeight = 'bold';
 					durationSpan.style.opacity = '0.9';
+					durationSpan.style.color = textColor;
 
 					timeDiv.appendChild(timeSpan);
 					timeDiv.appendChild(durationSpan);
@@ -250,6 +256,7 @@ function timeTrackingApp() {
 					const titleDiv = document.createElement('div');
 					titleDiv.className = 'fc-event-title';
 					titleDiv.textContent = arg.event.title;
+					titleDiv.style.color = textColor;
 
 					// Create secondary categories circles container
 					const secondaryContainer = document.createElement('div');
