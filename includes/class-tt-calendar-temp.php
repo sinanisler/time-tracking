@@ -63,9 +63,6 @@ class TT_Calendar {
 			<!-- Alpine.js for reactivity -->
 			<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 			
-			<!-- SortableJS for drag and drop -->
-			<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-			
 			<!-- Font Awesome -->
 			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 			
@@ -114,7 +111,11 @@ class TT_Calendar {
 						</div>
 						
 						<div class="flex gap-2">
-							<button @click="toggleSidebar()" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold">
+							<button @click="toggleSidebar()"
+							<button @click="toggleTodoSidebar()" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold">
+								<i class="fas fa-list-check"></i> <?php esc_html_e( 'TO-DO', 'time-tracking' ); ?>
+							</button>
+ class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold">
 								<i class="fas fa-cog"></i> <?php esc_html_e( 'Task Settings', 'time-tracking' ); ?>
 							</button>
 						</div>
@@ -530,125 +531,6 @@ class TT_Calendar {
 							</div>
 						</div>
 
-					</div>
-					
-				</div>
-			</div>
-			
-			<!-- TODO Sidebar -->
-			<div 
-				x-show="todoSidebarOpen" 
-				x-transition
-				class="w-96 bg-white shadow-2xl sidebar border-l border-gray-200"
-			>
-				<div class="p-6">
-					
-					<!-- Header -->
-					<div class="flex justify-between items-center mb-6">
-						<h2 class="text-2xl font-bold text-gray-800"><?php esc_html_e( 'TO-DO List', 'time-tracking' ); ?></h2>
-						<button @click="closeTodoSidebar()" class="text-gray-500 hover:text-gray-700">
-							<i class="fas fa-times text-xl"></i>
-						</button>
-					</div>
-					
-					<!-- Add New TODO Form -->
-					<form @submit.prevent="addTodo()" class="mb-6">
-						<div class="mb-3">
-							<label class="block text-sm font-semibold text-gray-700 mb-1"><?php esc_html_e( 'New TO-DO Item', 'time-tracking' ); ?></label>
-							<textarea 
-								x-model="newTodoText"
-								rows="2"
-								class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-								placeholder="<?php esc_attr_e( 'What needs to be done?', 'time-tracking' ); ?>"
-								required
-							></textarea>
-						</div>
-						
-						<!-- Optional Dates -->
-						<div class="grid grid-cols-2 gap-3 mb-3">
-							<div>
-								<label class="block text-xs font-semibold text-gray-600 mb-1"><?php esc_html_e( 'Start Date (Optional)', 'time-tracking' ); ?></label>
-								<input 
-									type="date" 
-									x-model="newTodoStartDate"
-									class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-								>
-							</div>
-							<div>
-								<label class="block text-xs font-semibold text-gray-600 mb-1"><?php esc_html_e( 'Deadline (Optional)', 'time-tracking' ); ?></label>
-								<input 
-									type="date" 
-									x-model="newTodoEndDate"
-									class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-								>
-							</div>
-						</div>
-						
-						<button
-							type="submit"
-							class="w-full px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold"
-						>
-							<i class="fas fa-plus"></i> <?php esc_html_e( 'Add TO-DO', 'time-tracking' ); ?>
-						</button>
-					</form>
-					
-					<!-- TODO List -->
-					<div>
-						<h3 class="text-lg font-semibold text-gray-800 mb-3"><?php esc_html_e( 'Your Items', 'time-tracking' ); ?></h3>
-						<div id="todoList" class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto">
-							<template x-for="todo in todos" :key="todo.id">
-								<div 
-									:data-id="todo.id"
-									class="todo-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-move border border-gray-200"
-									:class="{ 'opacity-50': todo.completed }"
-								>
-									<div class="flex items-start gap-3">
-										<!-- Drag Handle -->
-										<div class="cursor-grab">
-											<i class="fas fa-grip-vertical text-gray-400"></i>
-										</div>
-										
-										<!-- Checkbox -->
-										<input 
-											type="checkbox"
-											:checked="todo.completed"
-											@change="toggleTodoComplete(todo.id, $event.target.checked)"
-											class="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500 cursor-pointer"
-										>
-										
-										<!-- Content -->
-										<div class="flex-1">
-											<p 
-												class="text-sm font-medium text-gray-800 whitespace-pre-wrap"
-												:class="{ 'line-through': todo.completed }"
-												x-text="todo.text"
-											></p>
-											<div x-show="todo.start_date || todo.end_date" class="text-xs text-gray-500 mt-1">
-												<span x-show="todo.start_date">
-													<i class="fas fa-play-circle"></i> <span x-text="todo.start_date"></span>
-												</span>
-												<span x-show="todo.end_date" class="ml-2">
-													<i class="fas fa-flag-checkered"></i> <span x-text="todo.end_date"></span>
-												</span>
-												</div>
-										</div>
-										
-										<!-- Delete Button -->
-										<button
-											@click="deleteTodo(todo.id)"
-											class="text-red-500 hover:text-red-700 flex-shrink-0"
-										>
-											<i class="fas fa-trash text-sm"></i>
-										</button>
-									</div>
-								</div>
-							</template>
-							
-							<div x-show="todos.length === 0" class="text-center py-8 text-gray-500">
-								<i class="fas fa-clipboard-list text-4xl mb-2 opacity-30"></i>
-								<p><?php esc_html_e( 'No TO-DO items yet. Add one above!', 'time-tracking' ); ?></p>
-							</div>
-						</div>
 					</div>
 					
 				</div>

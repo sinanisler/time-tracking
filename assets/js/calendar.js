@@ -59,6 +59,7 @@ function timeTrackingApp() {
 		tasks: [],
 		categories: [],
 		sidebarOpen: true,
+		todoSidebarOpen: false,
 		activeTab: 'task',
 		isLoading: true,
 
@@ -98,6 +99,13 @@ function timeTrackingApp() {
 		currentTaskTimeLogs: [],
 		editingLogId: null,
 
+		// TODO
+		todos: [],
+		newTodoText: '',
+		newTodoStartDate: '',
+		newTodoEndDate: '',
+		todoSortable: null,
+
 		// Initialize
 		async init() {
 			this.isLoading = true;
@@ -118,6 +126,14 @@ function timeTrackingApp() {
 
 			this.isLoading = false;
 			window.showNotification(ttCalendarData.i18n.calendarLoaded, 'success');
+
+			// Load TODOs
+			await this.loadTodos();
+
+			// Initialize drag and drop for todos after Alpine has rendered
+			this.$nextTick(() => {
+				this.initTodoSortable();
+			});
 		},
 
 		initializeCalendar() {
@@ -773,6 +789,189 @@ function timeTrackingApp() {
 
 		closeSidebar() {
 			this.sidebarOpen = false;
+		},
+
+		// TODO Sidebar
+		toggleTodoSidebar() {
+			this.todoSidebarOpen = !this.todoSidebarOpen;
+			// Close task sidebar if open
+			if (this.todoSidebarOpen) {
+				this.sidebarOpen = false;
+			}
+			// Re-init sortable when sidebar opens
+			if (this.todoSidebarOpen) {
+				this.$nextTick(() => {
+					this.initTodoSortable();
+				});
+			}
+		},
+
+		closeTodoSidebar() {
+			this.todoSidebarOpen = false;
+		},
+
+		// TODO Functions
+		async loadTodos() {
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_get_todos');
+				formData.append('nonce', ttCalendarData.nonce);
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					this.todos = Array.isArray(data.data) ? data.data : [];
+				} else {
+					this.todos = [];
+				}
+			} catch (error) {
+				window.showNotification('Error loading TODOs: ' + error.message, 'error');
+			}
+		},
+
+		async addTodo() {
+			if (!this.newTodoText.trim()) return;
+
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_save_todo');
+				formData.append('nonce', ttCalendarData.nonce);
+				formData.append('todo_data', JSON.stringify({
+					text: this.newTodoText,
+					start_date: this.newTodoStartDate,
+					end_date: this.newTodoEndDate
+				}));
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					await this.loadTodos();
+					this.newTodoText = '';
+					this.newTodoStartDate = '';
+					this.newTodoEndDate = '';
+					window.showNotification('TO-DO added successfully!', 'success');
+					// Re-init sortable
+					this.$nextTick(() => {
+						this.initTodoSortable();
+					});
+				} else {
+					window.showNotification('Error adding TO-DO', 'error');
+				}
+			} catch (error) {
+				window.showNotification('Error adding TO-DO: ' + error.message, 'error');
+			}
+		},
+
+		async toggleTodoComplete(todoId, completed) {
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_update_todo');
+				formData.append('nonce', ttCalendarData.nonce);
+				formData.append('todo_id', todoId);
+				formData.append('updates', JSON.stringify({ completed: completed }));
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					await this.loadTodos();
+					this.$nextTick(() => {
+						this.initTodoSortable();
+					});
+				} else {
+					window.showNotification('Error updating TO-DO', 'error');
+				}
+			} catch (error) {
+				window.showNotification('Error updating TO-DO: ' + error.message, 'error');
+			}
+		},
+
+		async deleteTodo(todoId) {
+			if (!confirm('Delete this TO-DO item?')) return;
+
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_delete_todo');
+				formData.append('nonce', ttCalendarData.nonce);
+				formData.append('todo_id', todoId);
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					await this.loadTodos();
+					window.showNotification('TO-DO deleted successfully!', 'success');
+					this.$nextTick(() => {
+						this.initTodoSortable();
+					});
+				} else {
+					window.showNotification('Error deleting TO-DO', 'error');
+				}
+			} catch (error) {
+				window.showNotification('Error deleting TO-DO: ' + error.message, 'error');
+			}
+		},
+
+		initTodoSortable() {
+			const todoList = document.getElementById('todoList');
+			if (!todoList || !window.Sortable) return;
+
+			// Destroy existing sortable instance if it exists
+			if (this.todoSortable) {
+				this.todoSortable.destroy();
+			}
+
+			// Create new sortable instance
+			this.todoSortable = Sortable.create(todoList, {
+				animation: 150,
+				handle: '.cursor-grab',
+				ghostClass: 'sortable-ghost',
+				onEnd: async (evt) => {
+					// Get new order of IDs
+					const items = Array.from(todoList.querySelectorAll('.todo-item'));
+					const todoIds = items.map(item => item.dataset.id);
+
+					// Update backend
+					await this.reorderTodos(todoIds);
+				}
+			});
+		},
+
+		async reorderTodos(todoIds) {
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_reorder_todos');
+				formData.append('nonce', ttCalendarData.nonce);
+				formData.append('todo_ids', JSON.stringify(todoIds));
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					await this.loadTodos();
+				} else {
+					window.showNotification('Error reordering TODOs', 'error');
+				}
+			} catch (error) {
+				window.showNotification('Error reordering TODOs: ' + error.message, 'error');
+			}
 		}
 	};
 }

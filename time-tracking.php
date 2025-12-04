@@ -1,4 +1,4 @@
-<?php    
+<?php     
 /**
  * Plugin Name: Time Tracking
  * Plugin URI: https://sinanisler.com
@@ -89,6 +89,7 @@ class TimeTrackingPlugin {
 		$this->settings = new TT_Settings();
 		$this->calendar = new TT_Calendar( $this->settings );
 		$this->ajax     = new TT_Ajax();
+		$this->todo_ajax = new TT_Todo_Ajax();
 	}
 
 	/**
@@ -109,6 +110,7 @@ class TimeTrackingPlugin {
 		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-settings.php';
 		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-calendar.php';
 		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-ajax.php';
+		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-todo-ajax.php';
 		require_once plugin_dir_path(__FILE__) . 'includes/update-github.php';
 	}
 
