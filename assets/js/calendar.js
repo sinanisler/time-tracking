@@ -79,6 +79,13 @@ function timeTrackingApp() {
 			name: '',
 			color: '#3b82f6'
 		},
+
+		// Editing category
+		editingCategoryId: null,
+		editingCategory: {
+			name: '',
+			color: ''
+		},
 		
 		// Timer
 		timerRunning: false,
@@ -401,18 +408,18 @@ function timeTrackingApp() {
 		
 		async deleteCategory(categoryId) {
 			if (!confirm(ttCalendarData.i18n.confirmDeleteCategory)) return;
-			
+
 			try {
 				const formData = new FormData();
 				formData.append('action', 'tt_delete_category');
 				formData.append('nonce', ttCalendarData.nonce);
 				formData.append('category_id', categoryId);
-				
+
 				const response = await fetch(ttCalendarData.ajaxUrl, {
 					method: 'POST',
 					body: formData
 				});
-				
+
 				const data = await response.json();
 				if (data.success) {
 					await this.loadCategories();
@@ -422,6 +429,52 @@ function timeTrackingApp() {
 				}
 			} catch (error) {
 				window.showNotification(ttCalendarData.i18n.errorDeletingCategory + ': ' + error.message, 'error');
+			}
+		},
+
+		startEditCategory(category) {
+			this.editingCategoryId = category.id;
+			this.editingCategory = {
+				name: category.name,
+				color: category.color
+			};
+		},
+
+		cancelEditCategory() {
+			this.editingCategoryId = null;
+			this.editingCategory = {
+				name: '',
+				color: ''
+			};
+		},
+
+		async updateCategory(categoryId) {
+			try {
+				const formData = new FormData();
+				formData.append('action', 'tt_update_category');
+				formData.append('nonce', ttCalendarData.nonce);
+				formData.append('category_data', JSON.stringify({
+					id: categoryId,
+					name: this.editingCategory.name,
+					color: this.editingCategory.color
+				}));
+
+				const response = await fetch(ttCalendarData.ajaxUrl, {
+					method: 'POST',
+					body: formData
+				});
+
+				const data = await response.json();
+				if (data.success) {
+					await this.loadCategories();
+					this.updateCalendarEvents();
+					this.cancelEditCategory();
+					window.showNotification(ttCalendarData.i18n.categoryUpdated || 'Category updated successfully!', 'success');
+				} else {
+					window.showNotification(ttCalendarData.i18n.errorUpdatingCategory || 'Error updating category', 'error');
+				}
+			} catch (error) {
+				window.showNotification((ttCalendarData.i18n.errorUpdatingCategory || 'Error updating category') + ': ' + error.message, 'error');
 			}
 		},
 		

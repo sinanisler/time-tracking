@@ -24,6 +24,7 @@ class TT_Ajax {
 		add_action( 'wp_ajax_tt_delete_task', array( $this, 'ajax_delete_task' ) );
 		add_action( 'wp_ajax_tt_get_tasks', array( $this, 'ajax_get_tasks' ) );
 		add_action( 'wp_ajax_tt_save_category', array( $this, 'ajax_save_category' ) );
+		add_action( 'wp_ajax_tt_update_category', array( $this, 'ajax_update_category' ) );
 		add_action( 'wp_ajax_tt_delete_category', array( $this, 'ajax_delete_category' ) );
 		add_action( 'wp_ajax_tt_get_categories', array( $this, 'ajax_get_categories' ) );
 		add_action( 'wp_ajax_tt_save_time_log', array( $this, 'ajax_save_time_log' ) );
@@ -177,6 +178,33 @@ class TT_Ajax {
 		update_term_meta( $term['term_id'], '_tt_category_display_name', sanitize_text_field( $category_data['name'] ) );
 
 		wp_send_json_success( array( 'category_id' => $term['term_id'] ) );
+	}
+
+	/**
+	 * AJAX: Update category
+	 */
+	public function ajax_update_category() {
+		check_ajax_referer( 'tt_nonce', 'nonce' );
+
+		if ( ! is_user_logged_in() ) {
+			wp_send_json_error( __( 'You must be logged in', 'time-tracking' ) );
+		}
+
+		$category_data = json_decode( stripslashes( $_POST['category_data'] ), true );
+		$category_id   = intval( $category_data['id'] );
+		$user_id       = get_current_user_id();
+
+		// Verify user owns this category
+		$category_user = get_term_meta( $category_id, '_tt_category_user', true );
+		if ( $category_user != $user_id ) {
+			wp_send_json_error( __( 'You do not have permission to edit this category', 'time-tracking' ) );
+		}
+
+		// Update the display name and color in term meta
+		update_term_meta( $category_id, '_tt_category_display_name', sanitize_text_field( $category_data['name'] ) );
+		update_term_meta( $category_id, '_tt_category_color', sanitize_hex_color( $category_data['color'] ) );
+
+		wp_send_json_success();
 	}
 
 	/**

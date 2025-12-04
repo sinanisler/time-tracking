@@ -354,15 +354,15 @@ class TT_Calendar {
 					
 					<!-- Categories Tab -->
 					<div x-show="activeTab === 'categories'">
-						
+
 						<!-- Add New Category -->
 						<div class="mb-6 p-4 bg-blue-50 rounded-lg">
 							<h3 class="text-lg font-semibold text-gray-800 mb-3"><?php esc_html_e( 'Add New Category', 'time-tracking' ); ?></h3>
 							<form @submit.prevent="saveCategory()">
 								<div class="mb-3">
 									<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Category Name', 'time-tracking' ); ?></label>
-									<input 
-										type="text" 
+									<input
+										type="text"
 										x-model="newCategory.name"
 										class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
 										placeholder="<?php esc_attr_e( 'e.g., Development, Meeting', 'time-tracking' ); ?>"
@@ -372,20 +372,20 @@ class TT_Calendar {
 								<div class="mb-3">
 									<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Color', 'time-tracking' ); ?></label>
 									<div class="flex gap-2">
-										<input 
-											type="color" 
+										<input
+											type="color"
 											x-model="newCategory.color"
 											class="w-16 h-10 border border-gray-300 rounded cursor-pointer"
 										>
-										<input 
-											type="text" 
+										<input
+											type="text"
 											x-model="newCategory.color"
 											class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
 											placeholder="#3b82f6"
 										>
 									</div>
 								</div>
-								<button 
+								<button
 									type="submit"
 									class="w-full px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold"
 								>
@@ -393,31 +393,85 @@ class TT_Calendar {
 								</button>
 							</form>
 						</div>
-						
+
 						<!-- Categories List -->
 						<div>
 							<h3 class="text-lg font-semibold text-gray-800 mb-3"><?php esc_html_e( 'Existing Categories', 'time-tracking' ); ?></h3>
 							<div class="space-y-2">
 								<template x-for="category in categories" :key="category.id">
-									<div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
-										<div class="flex items-center gap-3">
-											<div 
-												class="w-8 h-8 rounded"
-												:style="`background-color: ${category.color}`"
-											></div>
-											<span class="font-semibold" x-text="category.name"></span>
+									<div class="p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+										<!-- View Mode -->
+										<div x-show="editingCategoryId !== category.id" class="flex items-center justify-between">
+											<div class="flex items-center gap-3">
+												<div
+													class="w-8 h-8 rounded"
+													:style="`background-color: ${category.color}`"
+												></div>
+												<span class="font-semibold" x-text="category.name"></span>
+											</div>
+											<div class="flex gap-2">
+												<button
+													@click="startEditCategory(category)"
+													class="text-blue-500 hover:text-blue-700"
+												>
+													<i class="fas fa-edit"></i>
+												</button>
+												<button
+													@click="deleteCategory(category.id)"
+													class="text-red-500 hover:text-red-700"
+												>
+													<i class="fas fa-trash"></i>
+												</button>
+											</div>
 										</div>
-										<button 
-											@click="deleteCategory(category.id)"
-											class="text-red-500 hover:text-red-700"
-										>
-											<i class="fas fa-trash"></i>
-										</button>
+
+										<!-- Edit Mode -->
+										<div x-show="editingCategoryId === category.id">
+											<form @submit.prevent="updateCategory(category.id)">
+												<div class="mb-2">
+													<input
+														type="text"
+														x-model="editingCategory.name"
+														class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+														required
+													>
+												</div>
+												<div class="mb-2">
+													<div class="flex gap-2">
+														<input
+															type="color"
+															x-model="editingCategory.color"
+															class="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+														>
+														<input
+															type="text"
+															x-model="editingCategory.color"
+															class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+														>
+													</div>
+												</div>
+												<div class="flex gap-2">
+													<button
+														type="submit"
+														class="flex-1 px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm font-semibold"
+													>
+														<i class="fas fa-save"></i> <?php esc_html_e( 'Save', 'time-tracking' ); ?>
+													</button>
+													<button
+														type="button"
+														@click="cancelEditCategory()"
+														class="flex-1 px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm font-semibold"
+													>
+														<i class="fas fa-times"></i> <?php esc_html_e( 'Cancel', 'time-tracking' ); ?>
+													</button>
+												</div>
+											</form>
+										</div>
 									</div>
 								</template>
 							</div>
 						</div>
-						
+
 					</div>
 					
 				</div>
