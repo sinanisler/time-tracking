@@ -118,6 +118,7 @@ body.time-tracking-page {
         transform: translateX(-100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -129,6 +130,7 @@ body.time-tracking-page {
         transform: translateX(0);
         opacity: 1;
     }
+
     to {
         transform: translateX(-100%);
         opacity: 0;
@@ -173,9 +175,9 @@ body.time-tracking-page {
 }
 
 .tt-secondary-circle {
-    width: 8px;
+    width: 20px;
     height: 8px;
-    border-radius: 50%;
+    border-radius: 3px;
     border: 1px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
@@ -184,7 +186,7 @@ body.time-tracking-page {
 /* Make room for secondary circles in events */
 .fc-event-main {
     position: relative;
-    padding-bottom: 18px !important;
+    padding-bottom: 2px;
 }
 
 /* Dark Mode Support */
