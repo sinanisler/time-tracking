@@ -605,6 +605,76 @@ class TT_Calendar {
 						class="w-full px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-semibold"
 					>
 						<i class="fas fa-plus"></i> <?php esc_html_e( 'Add TO-DO', 'time-tracking' ); ?>
+					</button>
+				</form>
+			</div>
+		</div>
+
+		<!-- TODO List -->
+		<div class="space-y-2" id="todoList">
+			<template x-for="todo in todos" :key="todo.id">
+				<div
+					class="todo-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+					:data-id="todo.id"
+				>
+					<div class="flex items-start gap-3">
+						<!-- Drag Handle -->
+						<button class="cursor-grab text-gray-400 hover:text-gray-600 mt-1">
+							<i class="fas fa-grip-vertical"></i>
+						</button>
+
+						<!-- Checkbox -->
+						<input
+							type="checkbox"
+							:checked="todo.completed"
+							@change="toggleTodoComplete(todo.id, $event.target.checked)"
+							class="w-5 h-5 mt-1 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+						>
+
+						<!-- TODO Content -->
+						<div class="flex-1">
+							<p
+								class="text-gray-800"
+								:class="{ 'line-through text-gray-400': todo.completed }"
+								x-text="todo.text"
+							></p>
+
+							<!-- Dates -->
+							<div x-show="todo.start_date || todo.end_date" class="text-xs text-gray-500 mt-1">
+								<span x-show="todo.start_date">
+									<i class="far fa-calendar"></i> <span x-text="todo.start_date"></span>
+								</span>
+								<span x-show="todo.start_date && todo.end_date"> - </span>
+								<span x-show="todo.end_date">
+									<i class="far fa-calendar-check"></i> <span x-text="todo.end_date"></span>
+								</span>
+							</div>
+						</div>
+
+						<!-- Delete Button -->
+						<button
+							@click="deleteTodo(todo.id)"
+							class="text-red-500 hover:text-red-700 mt-1"
+						>
+							<i class="fas fa-trash text-sm"></i>
+						</button>
+					</div>
+				</div>
+			</template>
+
+			<!-- Empty State -->
+			<div x-show="todos.length === 0" class="text-center py-8 text-gray-500">
+				<i class="fas fa-list-check text-4xl mb-3 opacity-50"></i>
+				<p><?php esc_html_e( 'No TO-DO items yet', 'time-tracking' ); ?></p>
+				<p class="text-sm"><?php esc_html_e( 'Click "New TO-DO Item" to add one', 'time-tracking' ); ?></p>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+</div>
+
 		<script src="<?php echo esc_url( TIME_TRACKING_PLUGIN_URL . 'assets/js/calendar.js' ); ?>"></script>
 		
 		</body>
