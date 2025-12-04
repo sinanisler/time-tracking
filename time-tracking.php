@@ -1,4 +1,4 @@
-<?php     
+<?php      
 /**
  * Plugin Name: Time Tracking
  * Plugin URI: https://sinanisler.com
