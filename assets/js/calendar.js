@@ -224,7 +224,7 @@ function timeTrackingApp() {
 					container.style.position = 'relative';
 					container.style.paddingBottom = '20px';
 					// Apply text color from event
-					container.style.color = arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff';
+					container.style.setProperty('color', arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff', 'important');
 
 					// Get the text color for all child elements
 					const textColor = arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff';
@@ -236,18 +236,18 @@ function timeTrackingApp() {
 					timeDiv.style.justifyContent = 'space-between';
 					timeDiv.style.alignItems = 'center';
 					timeDiv.style.marginBottom = '2px';
-					timeDiv.style.color = textColor;
+					timeDiv.style.setProperty('color', textColor, 'important');
 
 					const timeSpan = document.createElement('span');
 					timeSpan.textContent = arg.timeText;
-					timeSpan.style.color = textColor;
+					timeSpan.style.setProperty('color', textColor, 'important');
 
 					const durationSpan = document.createElement('span');
 					durationSpan.textContent = durationText;
 					durationSpan.style.fontSize = '0.85em';
 					durationSpan.style.fontWeight = 'bold';
 					durationSpan.style.opacity = '0.9';
-					durationSpan.style.color = textColor;
+					durationSpan.style.setProperty('color', textColor, 'important');
 
 					timeDiv.appendChild(timeSpan);
 					timeDiv.appendChild(durationSpan);
@@ -256,7 +256,7 @@ function timeTrackingApp() {
 					const titleDiv = document.createElement('div');
 					titleDiv.className = 'fc-event-title';
 					titleDiv.textContent = arg.event.title;
-					titleDiv.style.color = textColor;
+					titleDiv.style.setProperty('color', textColor, 'important');
 
 					// Create secondary categories circles container
 					const secondaryContainer = document.createElement('div');
