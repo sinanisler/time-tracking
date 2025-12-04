@@ -4,7 +4,7 @@
  * Plugin URI: https://sinanisler.com
  * Description: Advanced time tracking plugin with drag-to-select calendar, category management, and detailed time logging
  * Version: 3.4
- * Author: Sinan Isler
+ * Author: sinanisler
  * Author URI: https://sinanisler.com
  * License: GPL v2 or later
  * Text Domain: time-tracking
