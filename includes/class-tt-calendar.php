@@ -133,7 +133,7 @@ class TT_Calendar {
 			<div 
 				x-show="sidebarOpen" 
 				x-transition
-				class="w-96 bg-white shadow-2xl sidebar border-l border-gray-200"
+				class="w-96 bg-white  sidebar border-l border-gray-200"
 			>
 				<div class="p-6">
 					
@@ -542,7 +542,7 @@ class TT_Calendar {
 <div 
 	x-show="todoSidebarOpen" 
 	x-transition
-	class="w-96 bg-white shadow-2xl sidebar border-l border-gray-200"
+	class="w-96 bg-white  sidebar border-l border-gray-200"
 >
 	<div class="p-6">
 		

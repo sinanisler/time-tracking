@@ -40,6 +40,7 @@ class TT_Settings {
 		add_action( 'wp_ajax_tt_import_data', array( $this, 'ajax_import_data' ) );
 		add_action( 'wp_ajax_tt_clear_user_data', array( $this, 'ajax_clear_user_data' ) );
 		add_action( 'wp_ajax_tt_get_user_data_count', array( $this, 'ajax_get_user_data_count' ) );
+		add_action( 'wp_ajax_tt_check_for_updates', array( $this, 'ajax_check_for_updates' ) );
 	}
 
 	/**
@@ -220,6 +221,38 @@ class TT_Settings {
 				<?php
 				settings_fields( $this->option_name );
 				?>
+
+				<!-- Plugin Updates -->
+				<div class="tt-settings-section">
+					<h2><?php esc_html_e( 'Plugin Updates', 'time-tracking' ); ?></h2>
+					<table class="form-table">
+						<tr>
+							<th scope="row">
+								<?php esc_html_e( 'Check for Updates', 'time-tracking' ); ?>
+							</th>
+							<td>
+								<div style="margin-bottom: 10px;">
+									<p class="description" style="margin-top: 0;">
+										<?php
+										printf(
+											/* translators: %s: Current plugin version */
+											esc_html__( 'Current version: %s', 'time-tracking' ),
+											'<strong>' . esc_html( TIME_TRACKING_VERSION ) . '</strong>'
+										);
+										?>
+									</p>
+								</div>
+								<button type="button" class="button button-primary" id="tt-check-updates">
+									<span class="dashicons dashicons-update"></span> <?php esc_html_e( 'Check for Updates Now', 'time-tracking' ); ?>
+								</button>
+								<div id="tt-update-result" style="margin-top: 15px;"></div>
+								<p class="description">
+									<?php esc_html_e( 'Manually check for new plugin updates from GitHub. WordPress automatic update checks can be slow, use this to check immediately.', 'time-tracking' ); ?>
+								</p>
+							</td>
+						</tr>
+					</table>
+				</div>
 
 				<!-- General Settings -->
 				<div class="tt-settings-section">
@@ -414,12 +447,88 @@ class TT_Settings {
 			.button-danger:hover {
 				background: #c62d2d !important;
 			}
+			@keyframes spin {
+				from { transform: rotate(0deg); }
+				to { transform: rotate(360deg); }
+			}
+			.dashicons-update-spin {
+				animation: spin 1s linear infinite;
+			}
 		</style>
 
 		<script>
 		jQuery(document).ready(function($) {
 			// Load user count on page load
 			loadUserDataCount();
+
+			// Check for updates
+			$('#tt-check-updates').on('click', function() {
+				var button = $(this);
+				var resultDiv = $('#tt-update-result');
+
+				button.prop('disabled', true);
+				button.find('.dashicons').addClass('dashicons-update-spin');
+				resultDiv.html('<p style="color: #007cba;"><span class="dashicons dashicons-update dashicons-update-spin"></span> <?php echo esc_js( __( 'Checking for updates...', 'time-tracking' ) ); ?></p>');
+
+				$.ajax({
+					url: ajaxurl,
+					type: 'POST',
+					data: {
+						action: 'tt_check_for_updates',
+						nonce: '<?php echo esc_js( wp_create_nonce( 'tt_nonce' ) ); ?>'
+					},
+					success: function(response) {
+						button.prop('disabled', false);
+						button.find('.dashicons').removeClass('dashicons-update-spin');
+
+						if (response.success) {
+							var data = response.data;
+
+							if (data.update_available) {
+								var html = '<div style="padding: 12px; background: #d1e7dd; border: 1px solid #badbcc; border-radius: 4px;">';
+								html += '<p style="margin: 0 0 8px 0; font-weight: 600; color: #0f5132;"><span class="dashicons dashicons-yes-alt" style="color: #0f5132;"></span> ' + data.message + '</p>';
+
+								if (data.changelog) {
+									html += '<div style="margin-top: 12px; padding: 10px; background: #fff; border-radius: 3px;">';
+									html += '<strong><?php echo esc_js( __( 'Changelog:', 'time-tracking' ) ); ?></strong>';
+									html += '<div style="margin-top: 8px; max-height: 200px; overflow-y: auto;">' + data.changelog + '</div>';
+									html += '</div>';
+								}
+
+								html += '<div style="margin-top: 12px;">';
+								html += '<a href="<?php echo esc_url( admin_url( 'plugins.php' ) ); ?>" class="button button-primary"><?php echo esc_js( __( 'Go to Plugins Page', 'time-tracking' ) ); ?></a> ';
+								html += '<a href="' + data.github_url + '" class="button button-secondary" target="_blank" rel="noopener noreferrer"><?php echo esc_js( __( 'View on GitHub', 'time-tracking' ) ); ?></a>';
+								html += '</div>';
+								html += '</div>';
+
+								resultDiv.html(html);
+							} else {
+								var html = '<div style="padding: 12px; background: #cfe2ff; border: 1px solid #b6d4fe; border-radius: 4px;">';
+								html += '<p style="margin: 0; color: #084298;"><span class="dashicons dashicons-yes" style="color: #084298;"></span> ' + data.message + '</p>';
+								html += '</div>';
+
+								resultDiv.html(html);
+							}
+						} else {
+							var html = '<div style="padding: 12px; background: #f8d7da; border: 1px solid #f5c2c7; border-radius: 4px;">';
+							html += '<p style="margin: 0; color: #842029;"><span class="dashicons dashicons-warning" style="color: #842029;"></span> ' + (response.data || '<?php echo esc_js( __( 'Error checking for updates.', 'time-tracking' ) ); ?>') + '</p>';
+							html += '</div>';
+
+							resultDiv.html(html);
+						}
+					},
+					error: function() {
+						button.prop('disabled', false);
+						button.find('.dashicons').removeClass('dashicons-update-spin');
+
+						var html = '<div style="padding: 12px; background: #f8d7da; border: 1px solid #f5c2c7; border-radius: 4px;">';
+						html += '<p style="margin: 0; color: #842029;"><span class="dashicons dashicons-warning" style="color: #842029;"></span> <?php echo esc_js( __( 'Error checking for updates. Please try again.', 'time-tracking' ) ); ?></p>';
+						html += '</div>';
+
+						resultDiv.html(html);
+					}
+				});
+			});
 
 			// Export data
 			$('#tt-export-data').on('click', function() {
@@ -821,14 +930,104 @@ class TT_Settings {
 
 		$count = $wpdb->get_var(
 			$wpdb->prepare(
-				"SELECT COUNT(DISTINCT post_author) 
-				FROM {$wpdb->posts} 
-				WHERE post_type = %s 
+				"SELECT COUNT(DISTINCT post_author)
+				FROM {$wpdb->posts}
+				WHERE post_type = %s
 				AND post_status = 'publish'",
 				'tt_task'
 			)
 		);
 
 		return (int) $count;
+	}
+
+	/**
+	 * AJAX: Check for plugin updates from GitHub
+	 */
+	public function ajax_check_for_updates() {
+		check_ajax_referer( 'tt_nonce', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_send_json_error( __( 'You do not have permission to check for updates', 'time-tracking' ) );
+		}
+
+		// Get current plugin version
+		if ( ! function_exists( 'get_plugin_data' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+
+		$plugin_path = plugin_dir_path( __DIR__ ) . 'time-tracking.php';
+		$plugin_data = get_plugin_data( $plugin_path );
+		$current_version = $plugin_data['Version'];
+
+		// GitHub API URL for latest release
+		$github_api_url = 'https://api.github.com/repos/sinanisler/time-tracking/releases/latest';
+
+		// Fetch latest release from GitHub
+		$response = wp_remote_get(
+			$github_api_url,
+			array(
+				'timeout' => 15,
+				'headers' => array(
+					'Accept'     => 'application/vnd.github.v3+json',
+					'User-Agent' => 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ),
+				),
+			)
+		);
+
+		if ( is_wp_error( $response ) ) {
+			wp_send_json_error( __( 'Failed to connect to GitHub. Please try again later.', 'time-tracking' ) );
+		}
+
+		if ( wp_remote_retrieve_response_code( $response ) !== 200 ) {
+			wp_send_json_error( __( 'Unable to fetch update information from GitHub.', 'time-tracking' ) );
+		}
+
+		$release_data = json_decode( wp_remote_retrieve_body( $response ) );
+
+		if ( ! $release_data || ! isset( $release_data->tag_name ) ) {
+			wp_send_json_error( __( 'Invalid response from GitHub.', 'time-tracking' ) );
+		}
+
+		$latest_version = ltrim( $release_data->tag_name, 'vV' );
+		$github_url = isset( $release_data->html_url ) ? $release_data->html_url : 'https://github.com/sinanisler/time-tracking/releases';
+
+		// Compare versions
+		if ( version_compare( $latest_version, $current_version, '>' ) ) {
+			// Force WordPress to check for updates
+			delete_site_transient( 'update_plugins' );
+			wp_update_plugins();
+
+			$changelog = ! empty( $release_data->body ) ? wp_kses_post( $release_data->body ) : '';
+
+			wp_send_json_success(
+				array(
+					'update_available' => true,
+					'current_version'  => $current_version,
+					'latest_version'   => $latest_version,
+					'github_url'       => $github_url,
+					'changelog'        => $changelog,
+					'message'          => sprintf(
+						/* translators: 1: Current version, 2: Latest version */
+						__( 'New version available! Current: %1$s, Latest: %2$s. Please go to the Plugins page to update.', 'time-tracking' ),
+						$current_version,
+						$latest_version
+					),
+				)
+			);
+		} else {
+			wp_send_json_success(
+				array(
+					'update_available' => false,
+					'current_version'  => $current_version,
+					'latest_version'   => $latest_version,
+					'message'          => sprintf(
+						/* translators: %s: Current version */
+						__( 'You are using the latest version (%s).', 'time-tracking' ),
+						$current_version
+					),
+				)
+			);
+		}
 	}
 }
