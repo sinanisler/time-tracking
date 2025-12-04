@@ -176,7 +176,7 @@ class TT_Todo_Ajax {
 		$user_id  = get_current_user_id();
 
 		$todos = get_user_meta( $user_id, '_tt_todos', true );
-		if ( ! is_array( $tous ) ) {
+		if ( ! is_array( $todos ) ) {
 			wp_send_json_error( __( 'No todos found', 'time-tracking' ) );
 		}
 
