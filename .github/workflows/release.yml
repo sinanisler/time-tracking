@@ -158,13 +158,6 @@ jobs:
             
             ${{ steps.changelog.outputs.changelog }}
             
-            ## Installation
-            1. Download `time-tracking.zip` from the assets below
-            2. Go to WordPress Admin → Plugins → Add New → Upload Plugin
-            3. Choose the downloaded zip file and click Install Now
-            4. Activate the plugin
-            
-            Or let WordPress auto-update handle it for you!
           draft: false
           prerelease: false
         env:
