@@ -106,10 +106,10 @@ class TimeTrackingPlugin {
 	 * Load required dependencies
 	 */
 	private function load_dependencies() {
-		require_once TIME_TRACKING_PLUGIN_DIR . 'includes/class-tt-settings.php';
-		require_once TIME_TRACKING_PLUGIN_DIR . 'includes/class-tt-calendar.php';
-		require_once TIME_TRACKING_PLUGIN_DIR . 'includes/class-tt-ajax.php';
-		require_once TIME_TRACKING_PLUGIN_DIR . 'includes/update-github.php';
+		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-settings.php';
+		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-calendar.php';
+		require_once plugin_dir_path(__FILE__) . 'includes/class-tt-ajax.php';
+		require_once plugin_dir_path(__FILE__) . 'includes/update-github.php';
 	}
 
 	/**

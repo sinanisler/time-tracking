@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 $github_repo_owner = 'sinanisler';
 $github_repo_name  = 'time-tracking';
 $plugin_slug       = 'time-tracking';
-$plugin_file       = 'time-tracking/time-tracking.php';
+$plugin_file       = plugin_basename(plugin_dir_path(__DIR__) . 'time-tracking.php');
 
 /**
  * Check for Plugin Updates from GitHub
@@ -33,13 +33,7 @@ function time_tracking_check_github_update($transient) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
     
-    $plugin_path = TIME_TRACKING_PLUGIN_DIR . 'time-tracking.php';
-    
-    // Check if file exists before trying to read it
-    if (!file_exists($plugin_path) || !is_file($plugin_path)) {
-        return $transient;
-    }
-    
+    $plugin_path = plugin_dir_path(__DIR__) . 'time-tracking.php';
     $plugin_data = get_plugin_data($plugin_path);
     $current_version = $plugin_data['Version'];
 
@@ -161,7 +155,7 @@ function time_tracking_plugin_info_from_github($result, $action, $args) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
     
-    $plugin_path = WP_PLUGIN_DIR . '/' . $plugin_file;
+    $plugin_path = plugin_dir_path(__DIR__) . 'time-tracking.php';
     $plugin_data = get_plugin_data($plugin_path);
 
     // Prepare changelog from release body
