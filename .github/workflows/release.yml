@@ -154,7 +154,6 @@ jobs:
           tag_name: "v${{ steps.new_version.outputs.new_version }}"
           name: "Time Tracking v${{ steps.new_version.outputs.new_version }}"
           body: |
-            # Time Tracking Plugin v${{ steps.new_version.outputs.new_version }}
             
             ${{ steps.changelog.outputs.changelog }}
             
