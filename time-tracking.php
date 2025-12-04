@@ -3,7 +3,7 @@
  * Plugin Name: Time Tracking
  * Plugin URI: https://sinanisler.com
  * Description: Advanced time tracking plugin with drag-to-select calendar, category management, and detailed time logging
- * Version: 3.4
+ * Version: 3.5
  * Author: sinanisler
  * Author URI: https://sinanisler.com
  * License: GPL v2 or later
