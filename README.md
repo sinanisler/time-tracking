@@ -2,6 +2,10 @@
 
 Advanced time tracking plugin with drag-to-select calendar, category management, and detailed time logging for WordPress users.
 
+
+<img width="1895" height="988" alt="image" src="https://github.com/user-attachments/assets/cd81204c-ebc9-4a6c-a511-200787a1ca43" />
+
+
 ## Description
 
 Time Tracking is a powerful and intuitive time management plugin for WordPress that helps users track their work hours, manage tasks, and monitor productivity.
