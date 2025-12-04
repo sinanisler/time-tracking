@@ -370,7 +370,7 @@ class TT_Calendar {
 									>
 								</div>
 								<div class="mb-3">
-									<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Color', 'time-tracking' ); ?></label>
+									<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Background Color', 'time-tracking' ); ?></label>
 									<div class="flex gap-2">
 										<input
 											type="color"
@@ -382,6 +382,22 @@ class TT_Calendar {
 											x-model="newCategory.color"
 											class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
 											placeholder="#3b82f6"
+										>
+									</div>
+								</div>
+								<div class="mb-3">
+									<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Text Color', 'time-tracking' ); ?></label>
+									<div class="flex gap-2">
+										<input
+											type="color"
+											x-model="newCategory.textColor"
+											class="w-16 h-10 border border-gray-300 rounded cursor-pointer"
+										>
+										<input
+											type="text"
+											x-model="newCategory.textColor"
+											class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+											placeholder="#ffffff"
 										>
 									</div>
 								</div>
@@ -437,6 +453,7 @@ class TT_Calendar {
 													>
 												</div>
 												<div class="mb-2">
+													<label class="block text-xs font-semibold text-gray-600 mb-1"><?php esc_html_e( 'Background', 'time-tracking' ); ?></label>
 													<div class="flex gap-2">
 														<input
 															type="color"
@@ -446,6 +463,21 @@ class TT_Calendar {
 														<input
 															type="text"
 															x-model="editingCategory.color"
+															class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+														>
+													</div>
+												</div>
+												<div class="mb-2">
+													<label class="block text-xs font-semibold text-gray-600 mb-1"><?php esc_html_e( 'Text', 'time-tracking' ); ?></label>
+													<div class="flex gap-2">
+														<input
+															type="color"
+															x-model="editingCategory.textColor"
+															class="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+														>
+														<input
+															type="text"
+															x-model="editingCategory.textColor"
 															class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
 														>
 													</div>

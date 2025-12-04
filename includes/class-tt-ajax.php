@@ -174,6 +174,7 @@ class TT_Ajax {
 		}
 
 		update_term_meta( $term['term_id'], '_tt_category_color', sanitize_hex_color( $category_data['color'] ) );
+		update_term_meta( $term['term_id'], '_tt_category_text_color', isset( $category_data['textColor'] ) ? sanitize_hex_color( $category_data['textColor'] ) : '#ffffff' );
 		update_term_meta( $term['term_id'], '_tt_category_user', $user_id );
 		update_term_meta( $term['term_id'], '_tt_category_display_name', sanitize_text_field( $category_data['name'] ) );
 
@@ -200,9 +201,10 @@ class TT_Ajax {
 			wp_send_json_error( __( 'You do not have permission to edit this category', 'time-tracking' ) );
 		}
 
-		// Update the display name and color in term meta
+		// Update the display name and colors in term meta
 		update_term_meta( $category_id, '_tt_category_display_name', sanitize_text_field( $category_data['name'] ) );
 		update_term_meta( $category_id, '_tt_category_color', sanitize_hex_color( $category_data['color'] ) );
+		update_term_meta( $category_id, '_tt_category_text_color', sanitize_hex_color( $category_data['textColor'] ) );
 
 		wp_send_json_success();
 	}
@@ -265,10 +267,13 @@ class TT_Ajax {
 
 		foreach ( $terms as $term ) {
 			$display_name = get_term_meta( $term->term_id, '_tt_category_display_name', true );
+			$color        = get_term_meta( $term->term_id, '_tt_category_color', true );
+			$text_color   = get_term_meta( $term->term_id, '_tt_category_text_color', true );
 			$categories[] = array(
-				'id'    => $term->term_id,
-				'name'  => $display_name ? $display_name : $term->name,
-				'color' => get_term_meta( $term->term_id, '_tt_category_color', true ) ? get_term_meta( $term->term_id, '_tt_category_color', true ) : '#3b82f6',
+				'id'        => $term->term_id,
+				'name'      => $display_name ? $display_name : $term->name,
+				'color'     => $color ? $color : '#3b82f6',
+				'textColor' => $text_color ? $text_color : '#ffffff',
 			);
 		}
 

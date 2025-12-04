@@ -77,14 +77,16 @@ function timeTrackingApp() {
 		// New category
 		newCategory: {
 			name: '',
-			color: '#3b82f6'
+			color: '#3b82f6',
+			textColor: '#ffffff'
 		},
 
 		// Editing category
 		editingCategoryId: null,
 		editingCategory: {
 			name: '',
-			color: ''
+			color: '',
+			textColor: ''
 		},
 		
 		// Timer
@@ -206,31 +208,38 @@ function timeTrackingApp() {
 		
 		updateCalendarEvents() {
 			if (!this.calendar) return;
-			
+
 			const events = this.tasks.map(task => {
-				const categoryColor = this.getCategoryColor(task.category);
-				
+				const categoryColors = this.getCategoryColors(task.category);
+
 				return {
 					id: task.id,
 					title: task.title,
 					start: `${task.startDate}T${task.startTime}`,
 					end: `${task.endDate}T${task.endTime}`,
-					backgroundColor: categoryColor,
-					borderColor: categoryColor,
+					backgroundColor: categoryColors.background,
+					borderColor: categoryColors.background,
+					textColor: categoryColors.text,
 					extendedProps: {
 						taskData: task
 					}
 				};
 			});
-			
+
 			// More efficient: use removeAllEvents() then addEventSource()
 			this.calendar.removeAllEvents();
 			this.calendar.addEventSource(events);
 		},
-		
-		getCategoryColor(categoryId) {
+
+		getCategoryColors(categoryId) {
 			const category = this.categories.find(c => c.id == categoryId);
-			return category ? category.color : '#3b82f6';
+			return category ? {
+				background: category.color,
+				text: category.textColor
+			} : {
+				background: '#3b82f6',
+				text: '#ffffff'
+			};
 		},
 		
 		editTaskFromEvent(event) {
@@ -396,7 +405,7 @@ function timeTrackingApp() {
 				const data = await response.json();
 				if (data.success) {
 					await this.loadCategories();
-					this.newCategory = { name: '', color: '#3b82f6' };
+					this.newCategory = { name: '', color: '#3b82f6', textColor: '#ffffff' };
 					window.showNotification(ttCalendarData.i18n.categorySaved, 'success');
 				} else {
 					window.showNotification(ttCalendarData.i18n.errorSavingCategory, 'error');
@@ -436,7 +445,8 @@ function timeTrackingApp() {
 			this.editingCategoryId = category.id;
 			this.editingCategory = {
 				name: category.name,
-				color: category.color
+				color: category.color,
+				textColor: category.textColor
 			};
 		},
 
@@ -444,7 +454,8 @@ function timeTrackingApp() {
 			this.editingCategoryId = null;
 			this.editingCategory = {
 				name: '',
-				color: ''
+				color: '',
+				textColor: ''
 			};
 		},
 
@@ -456,7 +467,8 @@ function timeTrackingApp() {
 				formData.append('category_data', JSON.stringify({
 					id: categoryId,
 					name: this.editingCategory.name,
-					color: this.editingCategory.color
+					color: this.editingCategory.color,
+					textColor: this.editingCategory.textColor
 				}));
 
 				const response = await fetch(ttCalendarData.ajaxUrl, {
