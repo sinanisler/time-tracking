@@ -223,6 +223,8 @@ function timeTrackingApp() {
 					container.style.height = '100%';
 					container.style.position = 'relative';
 					container.style.paddingBottom = '20px';
+					// Apply text color from event
+					container.style.color = arg.event.textColor || arg.event.extendedProps.textColor || '#ffffff';
 
 					// Create time display
 					const timeDiv = document.createElement('div');
