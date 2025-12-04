@@ -71,6 +71,7 @@ function timeTrackingApp() {
 			endDate: '',
 			endTime: '11:00',
 			category: '',
+			secondaryCategories: [],
 			description: ''
 		},
 		
@@ -157,6 +158,7 @@ function timeTrackingApp() {
 						endDate: endDate,
 						endTime: endTime,
 						category: '',
+						secondaryCategories: [],
 						description: ''
 					};
 					
@@ -209,6 +211,7 @@ function timeTrackingApp() {
 		updateCalendarEvents() {
 			if (!this.calendar) return;
 
+			const self = this;
 			const events = this.tasks.map(task => {
 				const categoryColors = this.getCategoryColors(task.category);
 
@@ -229,6 +232,49 @@ function timeTrackingApp() {
 			// More efficient: use removeAllEvents() then addEventSource()
 			this.calendar.removeAllEvents();
 			this.calendar.addEventSource(events);
+
+			// Add secondary color circles after calendar renders
+			setTimeout(() => {
+				self.renderSecondaryColorCircles();
+			}, 100);
+		},
+
+		renderSecondaryColorCircles() {
+			// Remove existing secondary color circles
+			document.querySelectorAll('.tt-secondary-colors').forEach(el => el.remove());
+
+			// Add secondary color circles to each event
+			this.tasks.forEach(task => {
+				if (!task.secondaryCategories || task.secondaryCategories.length === 0) {
+					return;
+				}
+
+				// Find the event element
+				const eventEl = document.querySelector(`.fc-event[data-event-id="${task.id}"]`);
+				if (!eventEl) return;
+
+				// Find the event main content area
+				const eventMain = eventEl.querySelector('.fc-event-main');
+				if (!eventMain) return;
+
+				// Create container for secondary color circles
+				const circlesContainer = document.createElement('div');
+				circlesContainer.className = 'tt-secondary-colors';
+
+				// Add circles for each secondary category
+				task.secondaryCategories.forEach(categoryId => {
+					const category = this.categories.find(c => c.id == categoryId);
+					if (category) {
+						const circle = document.createElement('div');
+						circle.className = 'tt-secondary-circle';
+						circle.style.backgroundColor = category.color;
+						circle.title = category.name;
+						circlesContainer.appendChild(circle);
+					}
+				});
+
+				eventMain.appendChild(circlesContainer);
+			});
 		},
 
 		getCategoryColors(categoryId) {
@@ -361,6 +407,7 @@ function timeTrackingApp() {
 				endDate: '',
 				endTime: '11:00',
 				category: '',
+				secondaryCategories: [],
 				description: ''
 			};
 			this.currentTaskTimeLogs = [];

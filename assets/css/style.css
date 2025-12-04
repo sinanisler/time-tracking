@@ -159,6 +159,34 @@ body.time-tracking-page {
     color: white;
 }
 
+/* Secondary Category Circles */
+.tt-secondary-colors {
+    display: flex;
+    gap: 4px;
+    padding: 4px 6px 2px 6px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tt-secondary-circle {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+/* Make room for secondary circles in events */
+.fc-event-main {
+    position: relative;
+    padding-bottom: 18px !important;
+}
+
 /* Dark Mode Support */
 body.time-tracking-dark-mode {
     background-color: #1a202c;

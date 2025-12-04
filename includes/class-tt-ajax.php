@@ -80,6 +80,14 @@ class TT_Ajax {
 			wp_set_object_terms( $post_id, intval( $task_data['category'] ), 'tt_category' );
 		}
 
+		// Save secondary categories
+		if ( isset( $task_data['secondaryCategories'] ) && is_array( $task_data['secondaryCategories'] ) ) {
+			$secondary_categories = array_map( 'intval', $task_data['secondaryCategories'] );
+			update_post_meta( $post_id, '_tt_secondary_categories', $secondary_categories );
+		} else {
+			delete_post_meta( $post_id, '_tt_secondary_categories' );
+		}
+
 		wp_send_json_success( array( 'task_id' => $post_id ) );
 	}
 
@@ -134,17 +142,19 @@ class TT_Ajax {
 		$tasks = array();
 
 		foreach ( $query->posts as $post ) {
-			$category_terms = wp_get_object_terms( $post->ID, 'tt_category' );
+			$category_terms       = wp_get_object_terms( $post->ID, 'tt_category' );
+			$secondary_categories = get_post_meta( $post->ID, '_tt_secondary_categories', true );
 
 			$tasks[] = array(
-				'id'          => $post->ID,
-				'title'       => $post->post_title,
-				'startDate'   => get_post_meta( $post->ID, '_tt_start_date', true ),
-				'startTime'   => get_post_meta( $post->ID, '_tt_start_time', true ),
-				'endDate'     => get_post_meta( $post->ID, '_tt_end_date', true ),
-				'endTime'     => get_post_meta( $post->ID, '_tt_end_time', true ),
-				'description' => get_post_meta( $post->ID, '_tt_description', true ),
-				'category'    => ! empty( $category_terms ) ? $category_terms[0]->term_id : '',
+				'id'                  => $post->ID,
+				'title'               => $post->post_title,
+				'startDate'           => get_post_meta( $post->ID, '_tt_start_date', true ),
+				'startTime'           => get_post_meta( $post->ID, '_tt_start_time', true ),
+				'endDate'             => get_post_meta( $post->ID, '_tt_end_date', true ),
+				'endTime'             => get_post_meta( $post->ID, '_tt_end_time', true ),
+				'description'         => get_post_meta( $post->ID, '_tt_description', true ),
+				'category'            => ! empty( $category_terms ) ? $category_terms[0]->term_id : '',
+				'secondaryCategories' => is_array( $secondary_categories ) ? $secondary_categories : array(),
 			);
 		}
 

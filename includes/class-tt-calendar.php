@@ -217,18 +217,41 @@ class TT_Calendar {
 								</div>
 							</div>
 							
-							<!-- Category -->
+							<!-- Primary Category -->
 							<div class="mb-3">
-								<label class="block text-sm font-semibold text-gray-700 mb-1"><?php esc_html_e( 'Category', 'time-tracking' ); ?></label>
-								<select 
+								<label class="block text-sm font-semibold text-gray-700 mb-1"><?php esc_html_e( 'Primary Category', 'time-tracking' ); ?></label>
+								<select
 									x-model="currentTask.category"
 									class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
 								>
-									<option value=""><?php esc_html_e( 'Select Category', 'time-tracking' ); ?></option>
+									<option value=""><?php esc_html_e( 'Select Primary Category', 'time-tracking' ); ?></option>
 									<template x-for="category in categories" :key="category.id">
 										<option :value="category.id" x-text="category.name"></option>
 									</template>
 								</select>
+							</div>
+
+							<!-- Secondary Categories -->
+							<div class="mb-3">
+								<label class="block text-sm font-semibold text-gray-700 mb-2"><?php esc_html_e( 'Secondary Categories', 'time-tracking' ); ?></label>
+								<p class="text-xs text-gray-500 mb-2"><?php esc_html_e( 'Select additional categories to show as colored circles on the calendar', 'time-tracking' ); ?></p>
+								<div class="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+									<template x-for="category in categories" :key="category.id">
+										<label class="flex items-center gap-2 py-1 px-2 hover:bg-gray-100 rounded cursor-pointer">
+											<input
+												type="checkbox"
+												:value="category.id"
+												x-model="currentTask.secondaryCategories"
+												class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+											>
+											<div
+												class="w-4 h-4 rounded-full border border-gray-300"
+												:style="`background-color: ${category.color}`"
+											></div>
+											<span class="text-sm" x-text="category.name"></span>
+										</label>
+									</template>
+								</div>
 							</div>
 							
 							<!-- Description -->
