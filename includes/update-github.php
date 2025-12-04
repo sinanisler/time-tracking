@@ -33,7 +33,13 @@ function time_tracking_check_github_update($transient) {
         require_once ABSPATH . 'wp-admin/includes/plugin.php';
     }
     
-    $plugin_path = WP_PLUGIN_DIR . '/' . $plugin_file;
+    $plugin_path = TIME_TRACKING_PLUGIN_DIR . 'time-tracking.php';
+    
+    // Check if file exists before trying to read it
+    if (!file_exists($plugin_path) || !is_file($plugin_path)) {
+        return $transient;
+    }
+    
     $plugin_data = get_plugin_data($plugin_path);
     $current_version = $plugin_data['Version'];
 
