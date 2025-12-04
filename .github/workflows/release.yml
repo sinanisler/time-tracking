@@ -12,60 +12,172 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
-          fetch-depth: '0'
+          fetch-depth: 0  # Full history for changelog generation
 
-      - name: Get current version
+      - name: Get current version from plugin file
         id: get_version
         run: |
           version=$(grep -oP 'Version:\s*\K[0-9.]+' time-tracking.php)
           echo "Current version: $version"
-          echo "version=$version" >> $GITHUB_ENV
+          echo "current_version=$version" >> $GITHUB_OUTPUT
+          echo "CURRENT_VERSION=$version" >> $GITHUB_ENV
 
-      - name: Bump version if release
-        if: contains(github.event.head_commit.message, 'release')
+      - name: Determine version bump type
+        id: bump_type
         run: |
-          current_version=$(grep -oP 'Version:\s*\K[0-9.]+' time-tracking.php)
-          next_version=$(awk -F. '{print $1 "." ($2+1)}' <<< "$current_version")
-          sed -i "s/Version: $current_version/Version: $next_version/" time-tracking.php
-          echo "new_version=$next_version" >> $GITHUB_ENV
+          commit_msg="${{ github.event.head_commit.message }}"
+          echo "Commit message: $commit_msg"
+          
+          if [[ "$commit_msg" =~ release:major ]]; then
+            echo "bump_type=major" >> $GITHUB_OUTPUT
+            echo "BUMP_TYPE=major" >> $GITHUB_ENV
+          elif [[ "$commit_msg" =~ release:minor ]]; then
+            echo "bump_type=minor" >> $GITHUB_OUTPUT
+            echo "BUMP_TYPE=minor" >> $GITHUB_ENV
+          elif [[ "$commit_msg" =~ release:patch ]] || [[ "$commit_msg" =~ release ]]; then
+            echo "bump_type=patch" >> $GITHUB_OUTPUT
+            echo "BUMP_TYPE=patch" >> $GITHUB_ENV
+          else
+            echo "bump_type=none" >> $GITHUB_OUTPUT
+            echo "BUMP_TYPE=none" >> $GITHUB_ENV
+          fi
+
+      - name: Calculate new version
+        id: new_version
+        if: steps.bump_type.outputs.bump_type != 'none'
+        run: |
+          current="${{ steps.get_version.outputs.current_version }}"
+          bump_type="${{ steps.bump_type.outputs.bump_type }}"
+          
+          IFS='.' read -ra parts <<< "$current"
+          major="${parts[0]:-0}"
+          minor="${parts[1]:-0}"
+          patch="${parts[2]:-0}"
+          
+          if [ "$bump_type" = "major" ]; then
+            major=$((major + 1))
+            minor=0
+            patch=0
+          elif [ "$bump_type" = "minor" ]; then
+            minor=$((minor + 1))
+            patch=0
+          elif [ "$bump_type" = "patch" ]; then
+            patch=$((patch + 1))
+          fi
+          
+          new_version="$major.$minor.$patch"
+          echo "New version will be: $new_version"
+          echo "new_version=$new_version" >> $GITHUB_OUTPUT
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Check if version already exists
+        id: check_tag
+        if: steps.bump_type.outputs.bump_type != 'none'
+        run: |
+          new_version="${{ steps.new_version.outputs.new_version }}"
+          if git rev-parse "v$new_version" >/dev/null 2>&1; then
+            echo "Tag v$new_version already exists!"
+            echo "tag_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Tag v$new_version does not exist, proceeding..."
+            echo "tag_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update version in plugin file
+        if: steps.bump_type.outputs.bump_type != 'none' && steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          current="${{ steps.get_version.outputs.current_version }}"
+          new="${{ steps.new_version.outputs.new_version }}"
+          
+          # Update plugin header version
+          sed -i "s/Version: $current/Version: $new/" time-tracking.php
+          
+          # Update version constant
+          sed -i "s/define( 'TIME_TRACKING_VERSION', '$current' );/define( 'TIME_TRACKING_VERSION', '$new' );/" time-tracking.php
+          
+          echo "Updated version from $current to $new"
+
+      - name: Generate changelog
+        id: changelog
+        if: steps.bump_type.outputs.bump_type != 'none' && steps.check_tag.outputs.tag_exists == 'false'
+        run: |
+          # Get the latest tag or use initial commit if no tags exist
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)
+          
+          echo "## What's Changed" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          
+          # Get commits since last tag
+          git log $latest_tag..HEAD --pretty=format:"- %s (%h)" --no-merges >> CHANGELOG.md
+          
+          echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$latest_tag...v${{ steps.new_version.outputs.new_version }}" >> CHANGELOG.md
+          
+          # Output for release body
+          cat CHANGELOG.md
+          
+          # Save changelog for release
+          {
+            echo 'changelog<<EOF'
+            cat CHANGELOG.md
+            echo EOF
+          } >> $GITHUB_OUTPUT
 
       - name: Commit version bump
-        if: contains(github.event.head_commit.message, 'release')
+        if: steps.bump_type.outputs.bump_type != 'none' && steps.check_tag.outputs.tag_exists == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add time-tracking.php
-          git commit -m "Bump version to ${{ env.new_version }}"
+          git commit -m "chore: bump version to ${{ steps.new_version.outputs.new_version }}"
           git push
 
-      - name: Create zip file
+      - name: Create plugin zip file
+        if: steps.bump_type.outputs.bump_type != 'none' && steps.check_tag.outputs.tag_exists == 'false'
         run: |
           mkdir -p time-tracking
-          rsync -av --exclude='.git' --exclude='.github' --exclude='time-tracking' ./ time-tracking/
+          rsync -av --exclude='.git' --exclude='.github' --exclude='time-tracking' --exclude='CHANGELOG.md' ./ time-tracking/
           zip -r time-tracking.zip time-tracking
           rm -rf time-tracking
+          
+          # Verify zip was created
+          ls -lh time-tracking.zip
 
       - name: Create GitHub Release
-        if: contains(github.event.head_commit.message, 'release')
+        if: steps.bump_type.outputs.bump_type != 'none' && steps.check_tag.outputs.tag_exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
           files: time-tracking.zip
-          tag_name: "v${{ env.new_version }}"
-          name: "Release v${{ env.new_version }}"
-          body: "Release v${{ env.new_version }} of the plugin."
+          tag_name: "v${{ steps.new_version.outputs.new_version }}"
+          name: "Time Tracking v${{ steps.new_version.outputs.new_version }}"
+          body: |
+            # Time Tracking Plugin v${{ steps.new_version.outputs.new_version }}
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ## Installation
+            1. Download `time-tracking.zip` from the assets below
+            2. Go to WordPress Admin → Plugins → Add New → Upload Plugin
+            3. Choose the downloaded zip file and click Install Now
+            4. Activate the plugin
+            
+            Or let WordPress auto-update handle it for you!
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create GitHub Pre-release
-        if: contains(github.event.head_commit.message, 'alphatag')
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          files: time-tracking.zip
-          tag_name: "pre-v${{ env.version }}"
-          name: "Pre-release v${{ env.version }}"
-          body: "Pre-release v${{ env.version }} of the plugin."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Summary
+        if: steps.bump_type.outputs.bump_type != 'none'
+        run: |
+          if [ "${{ steps.check_tag.outputs.tag_exists }}" = "true" ]; then
+            echo "⚠️ Release skipped - version v${{ steps.new_version.outputs.new_version }} already exists"
+          else
+            echo "✅ Successfully created release v${{ steps.new_version.outputs.new_version }}"
+            echo "📦 Plugin zip file attached to release"
+            echo "🔄 WordPress sites will now see this update available"
+          fi
+

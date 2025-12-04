@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants
-define( 'TIME_TRACKING_VERSION', '3.0.0' );
+define( 'TIME_TRACKING_VERSION', '3.9' );
 define( 'TIME_TRACKING_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'TIME_TRACKING_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
