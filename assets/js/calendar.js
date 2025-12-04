@@ -83,15 +83,13 @@ function timeTrackingApp() {
 			textColor: '#ffffff'
 		},
 
-		// Editing category
-		editingCategoryId: null,
-		editingCategory: {
-			name: '',
-					titleDiv.style.setProperty('color', textColor, 'important');
-			textColor: ''
-		},
-
-		// Timer
+	// Editing category
+	editingCategoryId: null,
+	editingCategory: {
+		name: '',
+		color: '',
+		textColor: ''
+	},		// Timer
 		timerRunning: false,
 		timerSeconds: 0,
 		timerInterval: null,
