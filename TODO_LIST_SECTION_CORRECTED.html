@@ -1,0 +1,82 @@
+<!-- TODO List -->
+<div>
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">
+        <?php esc_html_e( 'Your Items', 'time-tracking' ); ?>
+    </h3>
+    <div id="todoList" class="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto">
+        <template x-for="todo in todos" :key="todo.id">
+            <div :data-id="todo.id"
+                x-data="{ isEditing: false, editText: todo.text, editStartDate: todo.start_date, editEndDate: todo.end_date }"
+                class="todo-item p-3 bg-gray-50 rounded-lg hover:bg-gray-100 border border-gray-200"
+                :class="{ 'opacity-50': todo.completed }">
+                <!-- View Mode -->
+                <div x-show="!isEditing" class="flex items-start gap-2">
+                    <!-- LEFT: All Icons in thin column -->
+                    <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                        <!-- Checkbox -->
+                        <input type="checkbox" :checked="todo.completed"
+                            @change="toggleTodoComplete(todo.id, $event.target.checked)"
+                            class="w-5 h-5 text-purple-600 rounded focus:ring-2 focus:ring-purple-500 cursor-pointer">
+                        <!-- Drag Handle -->
+                        <div class="cursor-grab">
+                            <i class="fas fa-grip-vertical text-gray-400 text-sm"></i>
+                        </div>
+                        <!-- Delete Button -->
+                        <button @click="deleteTodo(todo.id)" class="text-red-500 hover:text-red-700">
+                            <i class="fas fa-trash text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- RIGHT: Content - Click to edit -->
+                    <div class="flex-1 min-w-0 cursor-pointer" @click="isEditing = true">
+                        <p class="text-sm text-gray-800 whitespace-pre-wrap break-words"
+                            :class="{ 'line-through': todo.completed }" x-text="todo.text"></p>
+                        <div x-show="todo.start_date || todo.end_date" class="text-xs text-gray-500 mt-1">
+                            <span x-show="todo.start_date">
+                                <i class="fas fa-play-circle"></i> <span x-text="todo.start_date"></span>
+                            </span>
+                            <span x-show="todo.end_date" class="ml-2">
+                                <i class="fas fa-flag-checkered"></i> <span x-text="todo.end_date"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edit Mode -->
+                <div x-show="isEditing" class="space-y-2">
+                    <textarea x-model="editText" rows="2"
+                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                        placeholder="Task description"></textarea>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" x-model="editStartDate"
+                            class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                            placeholder="Start date">
+                        <input type="date" x-model="editEndDate"
+                            class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                            placeholder="End date">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button @click="updateTodo(todo.id, editText, editStartDate, editEndDate); isEditing = false"
+                            class="flex-1 px-3 py-1 bg-purple-500 hover:bg-purple-600 text-white rounded text-sm font-semibold">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button
+                            @click="isEditing = false; editText = todo.text; editStartDate = todo.start_date; editEndDate = todo.end_date"
+                            class="flex-1 px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-sm font-semibold">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <div x-show="todos.length === 0" class="text-center py-8 text-gray-500">
+            <i class="fas fa-clipboard-list text-4xl mb-2 opacity-30"></i>
+            <p>
+                <?php esc_html_e( 'No TO-DO items yet. Add one above!', 'time-tracking' ); ?>
+            </p>
+        </div>
+    </div>
+</div>
