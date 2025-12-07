@@ -3,7 +3,7 @@
 Advanced time tracking plugin with drag-to-select calendar, category management, and detailed time logging for WordPress users.
 
 
-<img width="1895" height="988" alt="image" src="https://github.com/user-attachments/assets/cd81204c-ebc9-4a6c-a511-200787a1ca43" />
+<img width="1897" height="985" alt="image" src="https://github.com/user-attachments/assets/5bc379ab-c14f-40f4-a9ea-9006c02dad85" />
 
 
 ## Description
