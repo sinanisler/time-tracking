@@ -1,4 +1,4 @@
-# Time Tracking
+# Calendar, Time Tracking and To-Do
 
 Advanced time tracking plugin with drag-to-select calendar, category management, and detailed time logging for WordPress users.
 
